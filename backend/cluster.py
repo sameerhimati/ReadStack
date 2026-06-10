@@ -1,17 +1,21 @@
 """
 Module C — topic structure.
 
-Turn embedded Articles into a SHALLOW TopicNode tree (max depth 2). The shape is
-decided by router.should_split (pure policy): a top-level topic only gets a
-sub-level when the router says so, given the topic's size, coherence, and depth.
-We never hardcode those thresholds here — coherence is the neural signal, the
-router owns the rule.
+Turn embedded Articles into a TopicNode tree whose DEPTH EMERGES FROM THE DATA.
+The root always fans out into the ~5-7 top themes a reader can hold in their head
+(the graph "bloom"); below that, every node subdivides only when the data shows
+real substructure. router.should_split (pure policy) owns that rule; we feed it
+scale-free signals (silhouette + coherence gain) so nothing here is an absolute,
+embedder-specific cutoff.
 
-Why flat, not a binary cascade: a recursive 2-way split produces a deep, lopsided
-tree of single-article leaves with repeated labels ("Reinforcement ->
-Reinforcement -> Reinforcement"). Readers think in ~5-7 top themes, each with a
-few distinct facets. So: flat k-way top level (k picked by silhouette), then ONE
-rule-gated sub-level. Root (depth 0) -> top topics (depth 1) -> facets (depth 2).
+Why data-driven, not a fixed coherence threshold: an absolute cutoff is brittle —
+it has to be retuned for every embedder/corpus (the old 0.72 was nomic-specific).
+Instead a node splits iff its best sub-clustering is genuinely separable
+(silhouette >= margin) AND tightens the groups (mean child coherence rises). A
+homogeneous theme clears neither bar and stays a leaf — correct, not a bug — while
+a diverse one keeps subdividing by ITS OWN internal structure. The same guards
+(min size, coherence gain) prevent degenerate single-article cascades with
+repeated labels ("Reinforcement -> Reinforcement -> Reinforcement").
 
 Coherence = mean pairwise cosine similarity of L2-normalized embeddings. Labels
 are cheap provisional placeholders (most-common tag); module B relabels later.
@@ -29,11 +33,11 @@ from router import should_split
 
 log = logging.getLogger(__name__)
 
-# Top level aims for the ~5-7 themes a reader can hold in their head; the sub
-# level (only when should_split fires) splits a big, incoherent theme into a few
-# distinct facets. Both are clamped so tiny corpora degrade sanely (>=2 per group).
-_TOP_K_RANGE = (5, 7)
-_SUB_K_RANGE = (2, 3)
+# The root fans out into the ~5-7 themes a reader can hold in their head (always,
+# for the graph bloom); deeper levels use a tighter k range and only materialize
+# when should_split fires. Both are clamped so tiny corpora degrade sanely.
+_ROOT_K_RANGE = (5, 7)
+_SUB_K_RANGE = (2, 4)
 
 
 def _coherence(unit_vecs: np.ndarray) -> float:
@@ -57,18 +61,21 @@ def _label(indices: list[int], articles: list[Article], node_id: str) -> str:
     return max(counts, key=lambda t: counts[t])
 
 
-def _kmeans_labels(unit: np.ndarray, k_range: tuple[int, int]) -> np.ndarray | None:
+def _best_kmeans(
+    unit: np.ndarray, k_range: tuple[int, int]
+) -> tuple[np.ndarray | None, float]:
     """Cluster unit-norm rows into k groups, k chosen by best silhouette in range.
 
     k is clamped so each group holds >=2 rows on average and k is a valid
-    silhouette argument (2 <= k <= n-1). Returns per-row labels, or None when the
-    subset is too small to split (caller should treat as a single group).
+    silhouette argument (2 <= k <= n-1). Returns (per-row labels, silhouette), or
+    (None, -1.0) when the subset is too small to split (caller treats as one group).
+    The silhouette is the split-quality signal the router gates on.
     """
     n = len(unit)
     k_max = min(k_range[1], n // 2, n - 1)
     k_min = min(k_range[0], k_max)
     if k_max < 2:                              # n <= 3: not worth splitting
-        return None
+        return None, -1.0
 
     best_labels: np.ndarray | None = None
     best_score = -1.0
@@ -79,11 +86,11 @@ def _kmeans_labels(unit: np.ndarray, k_range: tuple[int, int]) -> np.ndarray | N
         score = silhouette_score(unit, labels, metric="cosine")
         if score > best_score:
             best_score, best_labels = score, labels
-    return best_labels
+    return best_labels, best_score
 
 
 def build(articles: list[Article]) -> TopicNode:
-    """Embedded Articles -> a shallow (<=2 deep) TopicNode tree (root returned)."""
+    """Embedded Articles -> a TopicNode tree whose depth emerges from the data."""
     # Filter out anything we can't place: missing/None embedding.
     usable = [a for a in articles if a.embedding]
     dropped = len(articles) - len(usable)
@@ -98,7 +105,7 @@ def build(articles: list[Article]) -> TopicNode:
         counter += 1
         return node_id
 
-    # Trivial cases: nothing usable -> empty root leaf.
+    # Trivial case: nothing usable -> empty root leaf.
     if not usable:
         return TopicNode(id=next_id(), label="Topic t0", article_urls=[], children=[], depth=0)
 
@@ -106,57 +113,54 @@ def build(articles: list[Article]) -> TopicNode:
     norms = np.linalg.norm(unit, axis=1, keepdims=True)
     unit = unit / np.where(norms == 0.0, 1.0, norms)   # L2-normalize, guard zero vectors
 
-    all_indices = list(range(len(usable)))
-    root_id = next_id()
-    root_urls = [usable[i].url for i in all_indices]
-    root_label = _label(all_indices, usable, root_id)
+    def _groups(indices: list[int], labels: np.ndarray | None) -> list[list[int]] | None:
+        """Map sub-cluster labels (positions within `indices`) back to index groups."""
+        if labels is None:
+            return None
+        groups = [
+            [indices[j] for j in range(len(indices)) if labels[j] == g]
+            for g in sorted(set(labels))
+        ]
+        groups = [g for g in groups if g]
+        return groups if len(groups) >= 2 else None
 
-    def _leaf(indices: list[int], depth: int) -> TopicNode:
-        node_id = next_id()
-        return TopicNode(
-            id=node_id,
-            label=_label(indices, usable, node_id),
-            article_urls=[usable[i].url for i in indices],
-            children=[],
-            depth=depth,
-        )
+    def _child_coherence(groups: list[list[int]]) -> float:
+        """Size-weighted mean coherence across candidate child groups."""
+        total = sum(len(g) for g in groups)
+        return sum(_coherence(unit[g]) * len(g) for g in groups) / total
 
-    def _topic(indices: list[int]) -> TopicNode:
-        """One top-level theme (depth 1); gets a facet sub-level only if the router says so."""
+    def _maybe_split(indices: list[int], depth: int) -> list[list[int]] | None:
+        """Child index-groups if this node should subdivide, else None.
+
+        Root (depth 0) always fans out into the top themes (the graph bloom). Below
+        that, we compute the data signals (silhouette + coherence gain) and let
+        router.should_split — the sole owner of the size/depth/quality policy —
+        decide whether the substructure is real enough to materialize.
+        """
+        if depth == 0:
+            labels, _score = _best_kmeans(unit[indices], _ROOT_K_RANGE)
+            return _groups(indices, labels)
+
+        labels, silhouette = _best_kmeans(unit[indices], _SUB_K_RANGE)
+        groups = _groups(indices, labels)
+        if groups is None:
+            return None
+        gain = _child_coherence(groups) - _coherence(unit[indices])
+        min_child = min(len(g) for g in groups)
+        if not should_split(len(indices), silhouette, gain, min_child, depth):
+            return None
+        return groups
+
+    def _node(indices: list[int], depth: int) -> TopicNode:
         node_id = next_id()
         urls = [usable[i].url for i in indices]
         label = _label(indices, usable, node_id)
-        coherence = _coherence(unit[indices])
+        groups = _maybe_split(indices, depth)
+        children = [_node(g, depth + 1) for g in groups] if groups else []
+        return TopicNode(id=node_id, label=label, article_urls=urls,
+                         children=children, depth=depth)
 
-        if should_split(n_articles=len(indices), coherence=coherence, depth=1):
-            sub = _kmeans_labels(unit[indices], _SUB_K_RANGE)
-            if sub is not None:
-                groups = [
-                    [indices[j] for j in range(len(indices)) if sub[j] == g]
-                    for g in sorted(set(sub))
-                ]
-                groups = [g for g in groups if g]
-                if len(groups) >= 2:
-                    children = [_leaf(g, depth=2) for g in groups]
-                    return TopicNode(id=node_id, label=label, article_urls=urls,
-                                     children=children, depth=1)
-        # Stayed coherent / small enough / didn't separate -> leaf at depth 1.
-        return TopicNode(id=node_id, label=label, article_urls=urls, children=[], depth=1)
-
-    # Tiny corpus or too-small-to-cluster -> the root itself is the single topic.
-    top = _kmeans_labels(unit, _TOP_K_RANGE)
-    if top is None:
-        return TopicNode(id=root_id, label=root_label, article_urls=root_urls,
-                         children=[], depth=0)
-
-    top_groups = [
-        [all_indices[j] for j in range(len(all_indices)) if top[j] == g]
-        for g in sorted(set(top))
-    ]
-    top_groups = [g for g in top_groups if g]
-    children = [_topic(g) for g in top_groups]
-    return TopicNode(id=root_id, label=root_label, article_urls=root_urls,
-                     children=children, depth=0)
+    return _node(list(range(len(usable))), depth=0)
 
 
 def iter_nodes(root: TopicNode):

@@ -24,11 +24,16 @@ _DEFAULT_TIER = {
 # --- Symbolic knobs (thresholds) ---------------------------------------------
 HERO_TOPIC_MIN_ARTICLES = 8      # a topic this big earns a stronger lesson model
 GROUNDING_ESCALATE_BELOW = 0.6   # weak verifier unsure -> escalate the check
-SPLIT_MIN_ARTICLES = 6           # clusters bigger than this may split...
-SPLIT_MAX_COHERENCE = 0.72       # ...only if they're also incoherent (calibrated to
-                                 # nomic-embed, whose cosines run ~0.4 higher than MiniLM)
+SPLIT_MIN_ARTICLES = 6           # clusters smaller than this never subdivide
+# Granularity is DATA-DRIVEN, not a fixed coherence cutoff: a node subdivides only
+# when its best sub-clustering is genuinely separable (silhouette) AND the split
+# actually tightens the groups (coherence gain). Both signals are scale-free, so
+# they don't need recalibration when the embedder or corpus changes.
+SPLIT_MIN_SILHOUETTE = 0.05      # sub-structure must be at least this separable (cosine)
+SPLIT_MIN_COHERENCE_GAIN = 0.03  # ...and splitting must raise mean group coherence this much
+SPLIT_MIN_CHILD_ARTICLES = 2     # ...and produce no singleton facets (those read as noise)
 STOP_MAX_ARTICLES = 5            # small enough -> leaf node
-STOP_MAX_DEPTH = 4
+STOP_MAX_DEPTH = 4               # depth emerges from content; this is just a backstop
 
 
 def route(task: Task, *, topic_size: int = 0, grounding_score: float = 1.0) -> RouteDecision:
@@ -46,8 +51,23 @@ def route(task: Task, *, topic_size: int = 0, grounding_score: float = 1.0) -> R
     return RouteDecision(task=task, tier=tier)
 
 
-def should_split(n_articles: int, coherence: float, depth: int) -> bool:
-    """Granularity rule: split a topic only if it's both big AND incoherent."""
+def should_split(
+    n_articles: int,
+    silhouette: float,
+    coherence_gain: float,
+    min_child_size: int,
+    depth: int,
+) -> bool:
+    """Granularity rule: subdivide a node only when the data shows real substructure.
+
+    Split iff the node is big enough AND its best sub-clustering is separable
+    (silhouette), tighter than the parent (coherence gain), and free of singleton
+    facets (min_child_size). A genuinely homogeneous node clears none of these and
+    stays a leaf, so depth emerges from the content instead of an absolute,
+    embedder-specific coherence cutoff.
+    """
     if depth >= STOP_MAX_DEPTH or n_articles <= STOP_MAX_ARTICLES:
         return False
-    return n_articles >= SPLIT_MIN_ARTICLES and coherence < SPLIT_MAX_COHERENCE
+    if n_articles < SPLIT_MIN_ARTICLES or min_child_size < SPLIT_MIN_CHILD_ARTICLES:
+        return False
+    return silhouette >= SPLIT_MIN_SILHOUETTE and coherence_gain >= SPLIT_MIN_COHERENCE_GAIN
