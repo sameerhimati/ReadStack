@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.ruff_cache/
+
+# Env / secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Next.js / Node
+node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+.DS_Store
+
+# Generated media (audio/video lessons)
+*.mp4
+*.mp3
+*.wav
+backend/data/media/
+
+# Editor
+.idea/
+.vscode/
