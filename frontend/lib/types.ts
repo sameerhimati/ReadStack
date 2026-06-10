@@ -15,6 +15,8 @@ export type TopicNode = {
   depth: number;
 };
 
+export type LessonLength = "short" | "medium" | "long";
+
 export type Lesson = {
   topic_id: string;
   script: string;
@@ -22,6 +24,7 @@ export type Lesson = {
   grounding_score: number;
   audio_path: string | null;
   video_path: string | null;
+  length?: LessonLength;
 };
 
 export type Metrics = {

@@ -86,6 +86,19 @@ export default function Home() {
     setTab("reading");
   }
 
+  // Replace a regenerated lesson in the page-level source of truth, matched by
+  // topic_id. This is what makes a length change persist: lessonByTopic and the
+  // rendered markdown both derive from `data`, so swapping the lesson here flows
+  // the new script through LessonProse on the next render.
+  const handleLessonUpdated = useCallback((updated: Lesson) => {
+    setData((prev) => ({
+      ...prev,
+      lessons: prev.lessons.map((l) =>
+        l.topic_id === updated.topic_id ? updated : l
+      ),
+    }));
+  }, []);
+
   function focusTopic(id: string) {
     setTab("reading");
     setFocusTopicId(id);
@@ -123,6 +136,7 @@ export default function Home() {
             articleByUrl={articleByUrl}
             focusTopicId={focusTopicId}
             registerTopicRef={registerTopicRef}
+            onLessonUpdated={handleLessonUpdated}
           />
         )}
 

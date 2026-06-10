@@ -67,6 +67,35 @@ export async function addUrl(url: string): Promise<AddResponse> {
   return (await res.json()) as AddResponse;
 }
 
+// POST a topic + desired length to /lesson/regenerate. Costs one inference call
+// (~1-3s), so callers show a loading state. Parses defensively and on ANY
+// failure (network, non-200, malformed body) returns { ok: false } so the UI
+// can keep the existing lesson text instead of crashing.
+export type RegenerateResponse =
+  | { ok: true; lesson: Lesson; length: string }
+  | { ok: false; error?: string };
+
+export async function regenerateLesson(
+  topicId: string,
+  length: string
+): Promise<RegenerateResponse> {
+  try {
+    const res = await fetch(`${API_URL}/lesson/regenerate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ topic_id: topicId, length }),
+    });
+    if (!res.ok) throw new Error(`regenerate returned ${res.status}`);
+    const data = (await res.json()) as RegenerateResponse;
+    if (!data || !data.ok || !data.lesson) {
+      throw new Error("regenerate returned an unsuccessful/invalid body");
+    }
+    return data;
+  } catch {
+    return { ok: false };
+  }
+}
+
 // Resolve a stored audio_path (may be a bare filename or a path) to the
 // backend's /media/<file> route.
 export function mediaUrl(audioPath: string): string {

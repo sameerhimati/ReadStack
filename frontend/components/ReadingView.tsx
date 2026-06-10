@@ -10,6 +10,7 @@ import {
 } from "@/lib/lessons";
 import {
   AudioPlayer,
+  LengthPicker,
   LessonProse,
   SourceList,
   VerifiedBadge,
@@ -22,12 +23,14 @@ export default function ReadingView({
   lessonByTopic,
   articleByUrl,
   registerTopicRef,
+  onLessonUpdated,
 }: {
   data: PipelineResponse;
   lessonByTopic: Map<string, Lesson>;
   articleByUrl: Map<string, Article>;
   focusTopicId: string | null;
   registerTopicRef: (id: string, el: HTMLElement | null) => void;
+  onLessonUpdated: (updated: Lesson) => void;
 }) {
   const items = useMemo(
     () => deriveLessonItems(data, lessonByTopic),
@@ -57,6 +60,7 @@ export default function ReadingView({
           item={featured}
           articleByUrl={articleByUrl}
           registerTopicRef={registerTopicRef}
+          onLessonUpdated={onLessonUpdated}
         />
       )}
 
@@ -72,6 +76,7 @@ export default function ReadingView({
                 item={item}
                 articleByUrl={articleByUrl}
                 registerTopicRef={registerTopicRef}
+                onLessonUpdated={onLessonUpdated}
               />
             ))}
           </div>
@@ -88,10 +93,12 @@ function FeaturedLesson({
   item,
   articleByUrl,
   registerTopicRef,
+  onLessonUpdated,
 }: {
   item: LessonItem;
   articleByUrl: Map<string, Article>;
   registerTopicRef: (id: string, el: HTMLElement | null) => void;
+  onLessonUpdated: (updated: Lesson) => void;
 }) {
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -143,6 +150,12 @@ function FeaturedLesson({
           open={sourcesOpen}
           onToggle={() => setSourcesOpen((v) => !v)}
         />
+        <div className="ml-auto flex items-center gap-2">
+          <span className="text-[11px] uppercase tracking-wider text-[var(--muted)]">
+            Length
+          </span>
+          <LengthPicker lesson={item.lesson} onLessonUpdated={onLessonUpdated} />
+        </div>
       </div>
     </section>
   );
@@ -154,10 +167,12 @@ function LessonListCard({
   item,
   articleByUrl,
   registerTopicRef,
+  onLessonUpdated,
 }: {
   item: LessonItem;
   articleByUrl: Map<string, Article>;
   registerTopicRef: (id: string, el: HTMLElement | null) => void;
+  onLessonUpdated: (updated: Lesson) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
@@ -204,6 +219,12 @@ function LessonListCard({
       {expanded && (
         <div className="mt-4 space-y-4 border-t border-[var(--border)] pt-4">
           <AudioPlayer lesson={item.lesson} prominent />
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] uppercase tracking-wider text-[var(--muted)]">
+              Length
+            </span>
+            <LengthPicker lesson={item.lesson} onLessonUpdated={onLessonUpdated} />
+          </div>
           <LessonProse script={item.lesson.script} />
         </div>
       )}

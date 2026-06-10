@@ -25,6 +25,7 @@ import ingest
 import metrics
 import store
 import tasks
+from contracts import TopicNode
 
 app = FastAPI(title="ReadStack")
 app.add_middleware(
@@ -60,6 +61,14 @@ class IngestRequest(BaseModel):
 
 class AddRequest(BaseModel):
     url: str
+
+
+class RegenerateRequest(BaseModel):
+    topic_id: str
+    length: str = "medium"
+
+
+_LENGTHS = {"short", "medium", "long"}
 
 
 async def _ingest_new(urls: list[str]) -> int:
@@ -228,6 +237,44 @@ def _load_corpus() -> list[str]:
     if not _CORPUS.exists():
         return []
     return [ln.strip() for ln in _CORPUS.read_text().splitlines() if ln.strip()]
+
+
+@app.post("/lesson/regenerate")
+async def regenerate_lesson(req: RegenerateRequest):
+    """Rewrite one topic's lesson at a new length (short / medium / long).
+
+    Re-runs only that lesson + its grounding check, patches the cached snapshot in
+    place, and re-attaches any generated narration (keyed by topic_id). The pipeline
+    metrics are deliberately left untouched — this is a single on-demand call, not a
+    backlog run, so it shouldn't move the inference scoreboard.
+    """
+    snapshot = store.load_snapshot()
+    if snapshot is None or snapshot.get("topics") is None:
+        return {"ok": False, "error": "No stack yet — build the pipeline first."}
+
+    tree = TopicNode.model_validate(snapshot["topics"])
+    node = next((n for n in cluster.iter_nodes(tree) if n.id == req.topic_id), None)
+    if node is None:
+        return {"ok": False, "error": f"Unknown topic {req.topic_id}."}
+
+    by_url = {a.url: a for a in store.all_articles()}
+    node_articles = [by_url[u] for u in node.article_urls if u in by_url]
+    if not node_articles:
+        return {"ok": False, "error": "That topic has no readable articles."}
+
+    length = req.length if req.length in _LENGTHS else "medium"
+    lesson = await tasks.lesson(node, node_articles, length=length)
+    lesson = await tasks.verify(lesson, node_articles)
+    audio_video.apply_audio([lesson])   # re-attach existing narration by topic_id
+
+    new_lesson = lesson.model_dump()
+    new_lesson["length"] = length        # so the UI can show the active selection
+    snapshot["lessons"] = [
+        new_lesson if l.get("topic_id") == req.topic_id else l
+        for l in snapshot.get("lessons", [])
+    ]
+    store.save_snapshot(snapshot)
+    return {"ok": True, "lesson": new_lesson, "length": length}
 
 
 @app.get("/snapshot")

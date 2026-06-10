@@ -2,9 +2,71 @@
 
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
-import type { Article, Lesson } from "@/lib/types";
-import { mediaUrl } from "@/lib/api";
+import type { Article, Lesson, LessonLength } from "@/lib/types";
+import { mediaUrl, regenerateLesson } from "@/lib/api";
 import { hostOf } from "@/lib/lessons";
+
+const LENGTHS: { value: LessonLength; label: string }[] = [
+  { value: "short", label: "Short" },
+  { value: "medium", label: "Medium" },
+  { value: "long", label: "Long" },
+];
+
+// A 3-way segmented toggle that rewrites a lesson at a new length. Owns the
+// per-lesson loading state; on success it hands the regenerated lesson up via
+// `onLessonUpdated` so the page-level source of truth (and thus the rendered
+// markdown) updates in place. On failure it keeps the old text — no crash.
+export function LengthPicker({
+  lesson,
+  onLessonUpdated,
+}: {
+  lesson: Lesson;
+  onLessonUpdated: (updated: Lesson) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const active: LessonLength = lesson.length ?? "medium";
+
+  async function pick(length: LessonLength) {
+    if (busy || length === active) return;
+    setBusy(true);
+    const res = await regenerateLesson(lesson.topic_id, length);
+    if (res.ok) onLessonUpdated(res.lesson);
+    setBusy(false);
+  }
+
+  return (
+    <div
+      className="inline-flex items-center gap-2"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface)] p-0.5">
+        {LENGTHS.map(({ value, label }) => {
+          const isActive = value === active;
+          return (
+            <button
+              key={value}
+              type="button"
+              disabled={busy}
+              onClick={() => pick(value)}
+              aria-pressed={isActive}
+              className={[
+                "rounded-full px-2.5 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed",
+                isActive
+                  ? "bg-[color-mix(in_oklab,var(--accent)_14%,transparent)] text-[var(--accent)]"
+                  : "text-[var(--muted)] hover:text-[var(--ink)]",
+              ].join(" ")}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+      {busy && (
+        <span className="text-xs italic text-[var(--muted)]">rewriting…</span>
+      )}
+    </div>
+  );
+}
 
 // Plain-language trust signal — replaces the word "grounded" everywhere.
 // Verified => green. Otherwise amber, and clicking it reveals a short note
