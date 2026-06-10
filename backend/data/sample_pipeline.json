@@ -1,108 +1,63 @@
 {
   "articles": [
     {
-      "url": "https://claude.com/blog/building-agents-that-reach-production-systems-with-mcp",
-      "title": "Building agents that reach production systems with MCP | Claude",
+      "url": "https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills",
+      "title": "Equipping agents for the real world with Agent Skills",
       "tags": [
-        "building",
+        "equipping",
         "agents",
-        "reach",
-        "production"
+        "world",
+        "agent"
       ]
     },
     {
-      "url": "https://github.com/1st1/lat.md",
-      "title": "GitHub - 1st1/lat.md: Agent Lattice: a knowledge graph for your codebase, written in markdown.",
+      "url": "https://www.anthropic.com/engineering/code-execution-with-mcp",
+      "title": "Code execution with MCP: building more efficient AI agents",
       "tags": [
-        "github",
-        "agent",
-        "lattice",
-        "knowledge"
-      ]
-    },
-    {
-      "url": "https://github.com/karpathy/autoresearch",
-      "title": "GitHub - karpathy/autoresearch: AI agents running research on single-GPU nanochat training automatically",
-      "tags": [
-        "github",
-        "karpathy",
-        "autoresearch",
+        "execution",
+        "building",
+        "efficient",
         "agents"
       ]
     },
     {
-      "url": "https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/",
-      "title": "Prompt Engineering",
+      "url": "https://www.anthropic.com/engineering/building-agents-with-the-claude-agent-sdk",
+      "title": "Building agents with the Claude Agent SDK | Claude",
       "tags": [
-        "prompt",
-        "engineering"
-      ]
-    },
-    {
-      "url": "https://paulgraham.com/greatwork.html",
-      "title": "How to Do Great Work",
-      "tags": [
-        "great"
-      ]
-    },
-    {
-      "url": "https://research.google/blog/a-decoder-only-foundation-model-for-time-series-forecasting/",
-      "title": "A decoder-only foundation model for time-series forecasting",
-      "tags": [
-        "decoder",
-        "foundation",
-        "model",
-        "series"
-      ]
-    },
-    {
-      "url": "https://situational-awareness.ai/",
-      "title": "Introduction - SITUATIONAL AWARENESS: The Decade Ahead",
-      "tags": [
-        "introduction",
-        "situational",
-        "awareness",
-        "decade"
-      ]
-    },
-    {
-      "url": "https://twiecki.io/blog/2015/11/10/mcmc-sampling/",
-      "title": "while my_mcmc: gently(samples) - MCMC sampling for dummies",
-      "tags": [
-        "gently",
-        "samples",
-        "sampling",
-        "dummies"
-      ]
-    },
-    {
-      "url": "https://twiecki.io/blog/2018/05/03/copulas/",
-      "title": "while my_mcmc: gently(samples) - An intuitive, visual guide to copulas",
-      "tags": [
-        "gently",
-        "samples",
-        "intuitive",
-        "visual"
-      ]
-    },
-    {
-      "url": "https://unsloth.ai/blog/rl-environments",
-      "title": "Reinforcement Learning environments and how to build them",
-      "tags": [
-        "reinforcement",
-        "learning",
-        "environments",
-        "build"
-      ]
-    },
-    {
-      "url": "https://www.anthropic.com/engineering/april-23-postmortem",
-      "title": "An update on recent Claude Code quality reports",
-      "tags": [
-        "update",
-        "recent",
         "claude",
-        "quality"
+        "building",
+        "agents",
+        "agent"
+      ]
+    },
+    {
+      "url": "https://www.anthropic.com/engineering/advanced-tool-use",
+      "title": "Introducing advanced tool use on the Claude Developer Platform",
+      "tags": [
+        "introducing",
+        "advanced",
+        "claude",
+        "developer"
+      ]
+    },
+    {
+      "url": "https://www.anthropic.com/engineering/how-we-contain-claude",
+      "title": "How we contain Claude across products",
+      "tags": [
+        "contain",
+        "claude",
+        "across",
+        "products"
+      ]
+    },
+    {
+      "url": "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+      "title": "Effective context engineering for AI agents",
+      "tags": [
+        "effective",
+        "context",
+        "engineering",
+        "agents"
       ]
     },
     {
@@ -146,6 +101,516 @@
       ]
     },
     {
+      "url": "https://www.anthropic.com/engineering/april-23-postmortem",
+      "title": "An update on recent Claude Code quality reports",
+      "tags": [
+        "update",
+        "recent",
+        "claude",
+        "quality"
+      ]
+    },
+    {
+      "url": "https://claude.com/blog/building-agents-that-reach-production-systems-with-mcp",
+      "title": "Building agents that reach production systems with MCP | Claude",
+      "tags": [
+        "building",
+        "agents",
+        "reach",
+        "production"
+      ]
+    },
+    {
+      "url": "https://www.anthropic.com/research/tracing-thoughts-language-model",
+      "title": "Tracing the thoughts of a large language model",
+      "tags": [
+        "tracing",
+        "thoughts",
+        "large",
+        "language"
+      ]
+    },
+    {
+      "url": "https://www.anthropic.com/research/engineering-challenges-interpretability",
+      "title": "The engineering challenges of scaling interpretability",
+      "tags": [
+        "engineering",
+        "challenges",
+        "scaling",
+        "interpretability"
+      ]
+    },
+    {
+      "url": "https://www.anthropic.com/research/automated-alignment-researchers",
+      "title": "Automated Alignment Researchers: Using large language models to scale scalable oversight",
+      "tags": [
+        "automated",
+        "alignment",
+        "researchers",
+        "using"
+      ]
+    },
+    {
+      "url": "https://lilianweng.github.io/posts/2025-05-01-thinking/",
+      "title": "Why We Think",
+      "tags": [
+        "think"
+      ]
+    },
+    {
+      "url": "https://lilianweng.github.io/posts/2024-11-28-reward-hacking/",
+      "title": "Reward Hacking in Reinforcement Learning",
+      "tags": [
+        "reward",
+        "hacking",
+        "reinforcement",
+        "learning"
+      ]
+    },
+    {
+      "url": "https://lilianweng.github.io/posts/2024-07-07-hallucination/",
+      "title": "Extrinsic Hallucinations in LLMs",
+      "tags": [
+        "extrinsic",
+        "hallucinations"
+      ]
+    },
+    {
+      "url": "https://lilianweng.github.io/posts/2023-06-23-agent/",
+      "title": "LLM Powered Autonomous Agents",
+      "tags": [
+        "powered",
+        "autonomous",
+        "agents"
+      ]
+    },
+    {
+      "url": "https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/",
+      "title": "Prompt Engineering",
+      "tags": [
+        "prompt",
+        "engineering"
+      ]
+    },
+    {
+      "url": "https://deepmind.google/discover/blog/deep-reinforcement-learning/",
+      "title": "Deep Reinforcement Learning",
+      "tags": [
+        "reinforcement",
+        "learning"
+      ]
+    },
+    {
+      "url": "https://deepmind.google/blog/alphafold-using-ai-for-scientific-discovery-2020/",
+      "title": "AlphaFold: Using AI for scientific discovery",
+      "tags": [
+        "alphafold",
+        "using",
+        "scientific",
+        "discovery"
+      ]
+    },
+    {
+      "url": "https://deepmind.google/discover/blog/ai-solves-imo-problems-at-silver-medal-level/",
+      "title": "AI achieves silver-medal standard solving International Mathematical Olympiad problems",
+      "tags": [
+        "achieves",
+        "silver",
+        "medal",
+        "standard"
+      ]
+    },
+    {
+      "url": "https://deepmind.google/blog/alphageometry-an-olympiad-level-ai-system-for-geometry/",
+      "title": "AlphaGeometry: An Olympiad-level AI system for geometry",
+      "tags": [
+        "alphageometry",
+        "olympiad",
+        "level",
+        "system"
+      ]
+    },
+    {
+      "url": "https://research.google/blog/pathways-language-model-palm-scaling-to-540-billion-parameters-for-breakthrough-performance/",
+      "title": "Pathways Language Model (PaLM): Scaling to 540 Billion Parameters for Breakthrou",
+      "tags": [
+        "pathways",
+        "language",
+        "model",
+        "scaling"
+      ]
+    },
+    {
+      "url": "https://research.google/blog/looking-back-at-speculative-decoding/",
+      "title": "Looking back at speculative decoding",
+      "tags": [
+        "looking",
+        "speculative",
+        "decoding"
+      ]
+    },
+    {
+      "url": "https://research.google/blog/google-research-2022-beyond-ml-computer-systems/",
+      "title": "Google Research, 2022 & beyond: ML & computer systems",
+      "tags": [
+        "google",
+        "research",
+        "beyond",
+        "computer"
+      ]
+    },
+    {
+      "url": "https://research.google/blog/a-decoder-only-foundation-model-for-time-series-forecasting/",
+      "title": "A decoder-only foundation model for time-series forecasting",
+      "tags": [
+        "decoder",
+        "foundation",
+        "model",
+        "series"
+      ]
+    },
+    {
+      "url": "https://huggingface.co/blog/4bit-transformers-bitsandbytes",
+      "title": "Making LLMs even more accessible with bitsandbytes, 4-bit quantization and QLoRA",
+      "tags": [
+        "making",
+        "accessible",
+        "bitsandbytes",
+        "quantization"
+      ]
+    },
+    {
+      "url": "https://huggingface.co/blog/1_58_llm_extreme_quantization",
+      "title": "Fine-tuning LLMs to 1.58bit: extreme quantization made easy",
+      "tags": [
+        "tuning",
+        "extreme",
+        "quantization"
+      ]
+    },
+    {
+      "url": "https://huggingface.co/blog/overview-quantization-transformers",
+      "title": "Overview of natively supported quantization schemes in \ud83e\udd17 Transformers",
+      "tags": [
+        "overview",
+        "natively",
+        "supported",
+        "quantization"
+      ]
+    },
+    {
+      "url": "https://huggingface.co/blog/rlhf",
+      "title": "Illustrating Reinforcement Learning from Human Feedback (RLHF)",
+      "tags": [
+        "illustrating",
+        "reinforcement",
+        "learning",
+        "human"
+      ]
+    },
+    {
+      "url": "https://huggingface.co/blog/stackllama",
+      "title": "StackLLaMA: A hands-on guide to train LLaMA with RLHF",
+      "tags": [
+        "stackllama",
+        "hands",
+        "guide",
+        "train"
+      ]
+    },
+    {
+      "url": "https://huggingface.co/blog/ariG23498/rlhf-to-dpo",
+      "title": "Simplifying Alignment: From RLHF to Direct Preference Optimization (DPO)",
+      "tags": [
+        "simplifying",
+        "alignment",
+        "direct",
+        "preference"
+      ]
+    },
+    {
+      "url": "https://magazine.sebastianraschka.com/p/the-big-llm-architecture-comparison",
+      "title": "The Big LLM Architecture Comparison",
+      "tags": [
+        "architecture",
+        "comparison"
+      ]
+    },
+    {
+      "url": "https://magazine.sebastianraschka.com/p/understanding-multimodal-llms",
+      "title": "Understanding Multimodal LLMs",
+      "tags": [
+        "understanding",
+        "multimodal"
+      ]
+    },
+    {
+      "url": "https://magazine.sebastianraschka.com/p/state-of-llms-2025",
+      "title": "The State Of LLMs 2025: Progress, Progress, and Predictions",
+      "tags": [
+        "progress",
+        "state",
+        "predictions"
+      ]
+    },
+    {
+      "url": "https://magazine.sebastianraschka.com/p/using-and-finetuning-pretrained-transformers",
+      "title": "Using and Finetuning Pretrained Transformers",
+      "tags": [
+        "using",
+        "finetuning",
+        "pretrained",
+        "transformers"
+      ]
+    },
+    {
+      "url": "https://eugeneyan.com/writing/llm-patterns/",
+      "title": "Patterns for Building LLM-based Systems & Products",
+      "tags": [
+        "patterns",
+        "building",
+        "based",
+        "systems"
+      ]
+    },
+    {
+      "url": "https://eugeneyan.com/writing/llm-problems/",
+      "title": "How to Match LLM Patterns to Problems",
+      "tags": [
+        "match",
+        "patterns",
+        "problems"
+      ]
+    },
+    {
+      "url": "https://huyenchip.com/2025/01/07/agents.html",
+      "title": "Agents",
+      "tags": [
+        "agents"
+      ]
+    },
+    {
+      "url": "https://huyenchip.com/2023/04/11/llm-engineering.html",
+      "title": "Building LLM applications for production",
+      "tags": [
+        "building",
+        "applications",
+        "production"
+      ]
+    },
+    {
+      "url": "https://huyenchip.com/2023/08/16/llm-research-open-challenges.html",
+      "title": "Open challenges in LLM research",
+      "tags": [
+        "challenges",
+        "research"
+      ]
+    },
+    {
+      "url": "https://huyenchip.com/2025/01/16/ai-engineering-pitfalls.html",
+      "title": "Common pitfalls when building generative AI applications",
+      "tags": [
+        "common",
+        "pitfalls",
+        "building",
+        "generative"
+      ]
+    },
+    {
+      "url": "https://huyenchip.com/2024/03/14/ai-oss.html",
+      "title": "What I learned from looking at 900 most popular open source AI tools",
+      "tags": [
+        "learned",
+        "looking",
+        "popular",
+        "source"
+      ]
+    },
+    {
+      "url": "https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/",
+      "title": "The lethal trifecta for AI agents: private data, untrusted content, and external communication",
+      "tags": [
+        "lethal",
+        "trifecta",
+        "agents",
+        "private"
+      ]
+    },
+    {
+      "url": "https://simonwillison.net/2025/Jun/13/prompt-injection-design-patterns/",
+      "title": "Design Patterns for Securing LLM Agents against Prompt Injections",
+      "tags": [
+        "design",
+        "patterns",
+        "securing",
+        "agents"
+      ]
+    },
+    {
+      "url": "https://simonwillison.net/2025/Apr/11/camel/",
+      "title": "CaMeL offers a promising new direction for mitigating prompt injection attacks",
+      "tags": [
+        "camel",
+        "offers",
+        "promising",
+        "direction"
+      ]
+    },
+    {
+      "url": "https://simonwillison.net/2024/Mar/5/prompt-injection-jailbreaking/",
+      "title": "Prompt injection and jailbreaking are not the same thing",
+      "tags": [
+        "prompt",
+        "injection",
+        "jailbreaking",
+        "thing"
+      ]
+    },
+    {
+      "url": "https://blog.cloudflare.com/workers-ai/",
+      "title": "Workers AI: serverless GPU-powered inference on Cloudflare\u2019s global network",
+      "tags": [
+        "workers",
+        "serverless",
+        "powered",
+        "inference"
+      ]
+    },
+    {
+      "url": "https://blog.cloudflare.com/cloudflares-most-efficient-ai-inference-engine/",
+      "title": "How we built the most efficient inference engine for Cloudflare\u2019s network",
+      "tags": [
+        "built",
+        "efficient",
+        "inference",
+        "engine"
+      ]
+    },
+    {
+      "url": "https://blog.cloudflare.com/ai-platform/",
+      "title": "Cloudflare\u2019s AI Platform: an inference layer designed for agents",
+      "tags": [
+        "cloudflare",
+        "platform",
+        "inference",
+        "layer"
+      ]
+    },
+    {
+      "url": "https://blog.cloudflare.com/bringing-ai-to-the-edge/",
+      "title": "Bringing AI to the edge with NVIDIA GPUs",
+      "tags": [
+        "bringing",
+        "nvidia"
+      ]
+    },
+    {
+      "url": "https://blog.cloudflare.com/workers-ai-bigger-better-faster/",
+      "title": "Cloudflare\u2019s bigger, better, faster AI platform",
+      "tags": [
+        "cloudflare",
+        "bigger",
+        "better",
+        "faster"
+      ]
+    },
+    {
+      "url": "http://karpathy.github.io/2019/04/25/recipe/",
+      "title": "A Recipe for Training Neural Networks",
+      "tags": [
+        "recipe",
+        "training",
+        "neural",
+        "networks"
+      ]
+    },
+    {
+      "url": "http://karpathy.github.io/2022/03/14/lecun1989/",
+      "title": "Deep Neural Nets: 33 years ago and 33 years from now",
+      "tags": [
+        "years",
+        "neural"
+      ]
+    },
+    {
+      "url": "https://stripe.com/blog/idempotency",
+      "title": "Designing robust and predictable APIs with idempotency",
+      "tags": [
+        "designing",
+        "robust",
+        "predictable",
+        "idempotency"
+      ]
+    },
+    {
+      "url": "https://stripe.com/blog/rate-limiters",
+      "title": "Scaling your API with rate limiters",
+      "tags": [
+        "scaling",
+        "limiters"
+      ]
+    },
+    {
+      "url": "https://stripe.com/blog/api-versioning",
+      "title": "APIs as infrastructure: future-proofing Stripe with versioning",
+      "tags": [
+        "infrastructure",
+        "future",
+        "proofing",
+        "stripe"
+      ]
+    },
+    {
+      "url": "https://unsloth.ai/blog/rl-environments",
+      "title": "Reinforcement Learning environments and how to build them",
+      "tags": [
+        "reinforcement",
+        "learning",
+        "environments",
+        "build"
+      ]
+    },
+    {
+      "url": "https://twiecki.io/blog/2015/11/10/mcmc-sampling/",
+      "title": "while my_mcmc: gently(samples) - MCMC sampling for dummies",
+      "tags": [
+        "gently",
+        "samples",
+        "sampling",
+        "dummies"
+      ]
+    },
+    {
+      "url": "https://twiecki.io/blog/2018/05/03/copulas/",
+      "title": "while my_mcmc: gently(samples) - An intuitive, visual guide to copulas",
+      "tags": [
+        "gently",
+        "samples",
+        "intuitive",
+        "visual"
+      ]
+    },
+    {
+      "url": "https://github.com/karpathy/autoresearch",
+      "title": "GitHub - karpathy/autoresearch: AI agents running research on single-GPU nanochat training automatically",
+      "tags": [
+        "github",
+        "karpathy",
+        "autoresearch",
+        "agents"
+      ]
+    },
+    {
+      "url": "https://github.com/1st1/lat.md",
+      "title": "GitHub - 1st1/lat.md: Agent Lattice: a knowledge graph for your codebase, written in markdown.",
+      "tags": [
+        "github",
+        "agent",
+        "lattice",
+        "knowledge"
+      ]
+    },
+    {
       "url": "https://www.news.aakashg.com/p/autoresearch-guide-for-pms",
       "title": "PM's Guide to Karpathy's Autoresearch",
       "tags": [
@@ -153,60 +618,528 @@
         "karpathy",
         "autoresearch"
       ]
+    },
+    {
+      "url": "https://paulgraham.com/greatwork.html",
+      "title": "How to Do Great Work",
+      "tags": [
+        "great"
+      ]
+    },
+    {
+      "url": "https://situational-awareness.ai/",
+      "title": "Introduction - SITUATIONAL AWARENESS: The Decade Ahead",
+      "tags": [
+        "introduction",
+        "situational",
+        "awareness",
+        "decade"
+      ]
     }
   ],
   "topics": {
     "id": "t0",
     "label": "Agents",
     "article_urls": [
-      "https://claude.com/blog/building-agents-that-reach-production-systems-with-mcp",
-      "https://github.com/1st1/lat.md",
-      "https://github.com/karpathy/autoresearch",
-      "https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/",
-      "https://paulgraham.com/greatwork.html",
-      "https://research.google/blog/a-decoder-only-foundation-model-for-time-series-forecasting/",
-      "https://situational-awareness.ai/",
-      "https://twiecki.io/blog/2015/11/10/mcmc-sampling/",
-      "https://twiecki.io/blog/2018/05/03/copulas/",
-      "https://unsloth.ai/blog/rl-environments",
-      "https://www.anthropic.com/engineering/april-23-postmortem",
+      "https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills",
+      "https://www.anthropic.com/engineering/code-execution-with-mcp",
+      "https://www.anthropic.com/engineering/building-agents-with-the-claude-agent-sdk",
+      "https://www.anthropic.com/engineering/advanced-tool-use",
+      "https://www.anthropic.com/engineering/how-we-contain-claude",
+      "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
       "https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents",
       "https://www.anthropic.com/engineering/harness-design-long-running-apps",
       "https://www.anthropic.com/engineering/multi-agent-research-system",
       "https://www.anthropic.com/engineering/writing-tools-for-agents",
-      "https://www.news.aakashg.com/p/autoresearch-guide-for-pms"
+      "https://www.anthropic.com/engineering/april-23-postmortem",
+      "https://claude.com/blog/building-agents-that-reach-production-systems-with-mcp",
+      "https://www.anthropic.com/research/tracing-thoughts-language-model",
+      "https://www.anthropic.com/research/engineering-challenges-interpretability",
+      "https://www.anthropic.com/research/automated-alignment-researchers",
+      "https://lilianweng.github.io/posts/2025-05-01-thinking/",
+      "https://lilianweng.github.io/posts/2024-11-28-reward-hacking/",
+      "https://lilianweng.github.io/posts/2024-07-07-hallucination/",
+      "https://lilianweng.github.io/posts/2023-06-23-agent/",
+      "https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/",
+      "https://deepmind.google/discover/blog/deep-reinforcement-learning/",
+      "https://deepmind.google/blog/alphafold-using-ai-for-scientific-discovery-2020/",
+      "https://deepmind.google/discover/blog/ai-solves-imo-problems-at-silver-medal-level/",
+      "https://deepmind.google/blog/alphageometry-an-olympiad-level-ai-system-for-geometry/",
+      "https://research.google/blog/pathways-language-model-palm-scaling-to-540-billion-parameters-for-breakthrough-performance/",
+      "https://research.google/blog/looking-back-at-speculative-decoding/",
+      "https://research.google/blog/google-research-2022-beyond-ml-computer-systems/",
+      "https://research.google/blog/a-decoder-only-foundation-model-for-time-series-forecasting/",
+      "https://huggingface.co/blog/4bit-transformers-bitsandbytes",
+      "https://huggingface.co/blog/1_58_llm_extreme_quantization",
+      "https://huggingface.co/blog/overview-quantization-transformers",
+      "https://huggingface.co/blog/rlhf",
+      "https://huggingface.co/blog/stackllama",
+      "https://huggingface.co/blog/ariG23498/rlhf-to-dpo",
+      "https://magazine.sebastianraschka.com/p/the-big-llm-architecture-comparison",
+      "https://magazine.sebastianraschka.com/p/understanding-multimodal-llms",
+      "https://magazine.sebastianraschka.com/p/state-of-llms-2025",
+      "https://magazine.sebastianraschka.com/p/using-and-finetuning-pretrained-transformers",
+      "https://eugeneyan.com/writing/llm-patterns/",
+      "https://eugeneyan.com/writing/llm-problems/",
+      "https://huyenchip.com/2025/01/07/agents.html",
+      "https://huyenchip.com/2023/04/11/llm-engineering.html",
+      "https://huyenchip.com/2023/08/16/llm-research-open-challenges.html",
+      "https://huyenchip.com/2025/01/16/ai-engineering-pitfalls.html",
+      "https://huyenchip.com/2024/03/14/ai-oss.html",
+      "https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/",
+      "https://simonwillison.net/2025/Jun/13/prompt-injection-design-patterns/",
+      "https://simonwillison.net/2025/Apr/11/camel/",
+      "https://simonwillison.net/2024/Mar/5/prompt-injection-jailbreaking/",
+      "https://blog.cloudflare.com/workers-ai/",
+      "https://blog.cloudflare.com/cloudflares-most-efficient-ai-inference-engine/",
+      "https://blog.cloudflare.com/ai-platform/",
+      "https://blog.cloudflare.com/bringing-ai-to-the-edge/",
+      "https://blog.cloudflare.com/workers-ai-bigger-better-faster/",
+      "http://karpathy.github.io/2019/04/25/recipe/",
+      "http://karpathy.github.io/2022/03/14/lecun1989/",
+      "https://stripe.com/blog/idempotency",
+      "https://stripe.com/blog/rate-limiters",
+      "https://stripe.com/blog/api-versioning",
+      "https://unsloth.ai/blog/rl-environments",
+      "https://twiecki.io/blog/2015/11/10/mcmc-sampling/",
+      "https://twiecki.io/blog/2018/05/03/copulas/",
+      "https://github.com/karpathy/autoresearch",
+      "https://github.com/1st1/lat.md",
+      "https://www.news.aakashg.com/p/autoresearch-guide-for-pms",
+      "https://paulgraham.com/greatwork.html",
+      "https://situational-awareness.ai/"
     ],
     "children": [
       {
         "id": "t1",
-        "label": "Agents",
+        "label": "Reinforcement",
         "article_urls": [
-          "https://claude.com/blog/building-agents-that-reach-production-systems-with-mcp",
-          "https://github.com/1st1/lat.md",
-          "https://github.com/karpathy/autoresearch",
-          "https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/",
-          "https://paulgraham.com/greatwork.html",
-          "https://research.google/blog/a-decoder-only-foundation-model-for-time-series-forecasting/",
-          "https://situational-awareness.ai/",
-          "https://unsloth.ai/blog/rl-environments",
-          "https://www.anthropic.com/engineering/april-23-postmortem",
-          "https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents",
+          "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
           "https://www.anthropic.com/engineering/harness-design-long-running-apps",
-          "https://www.anthropic.com/engineering/multi-agent-research-system",
-          "https://www.anthropic.com/engineering/writing-tools-for-agents",
-          "https://www.news.aakashg.com/p/autoresearch-guide-for-pms"
+          "https://www.anthropic.com/research/tracing-thoughts-language-model",
+          "https://www.anthropic.com/research/engineering-challenges-interpretability",
+          "https://www.anthropic.com/research/automated-alignment-researchers",
+          "https://lilianweng.github.io/posts/2025-05-01-thinking/",
+          "https://lilianweng.github.io/posts/2024-11-28-reward-hacking/",
+          "https://lilianweng.github.io/posts/2024-07-07-hallucination/",
+          "https://lilianweng.github.io/posts/2023-06-23-agent/",
+          "https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/",
+          "https://deepmind.google/discover/blog/deep-reinforcement-learning/",
+          "https://deepmind.google/blog/alphafold-using-ai-for-scientific-discovery-2020/",
+          "https://deepmind.google/discover/blog/ai-solves-imo-problems-at-silver-medal-level/",
+          "https://deepmind.google/blog/alphageometry-an-olympiad-level-ai-system-for-geometry/",
+          "https://research.google/blog/pathways-language-model-palm-scaling-to-540-billion-parameters-for-breakthrough-performance/",
+          "https://research.google/blog/looking-back-at-speculative-decoding/",
+          "https://research.google/blog/google-research-2022-beyond-ml-computer-systems/",
+          "https://research.google/blog/a-decoder-only-foundation-model-for-time-series-forecasting/",
+          "https://huggingface.co/blog/4bit-transformers-bitsandbytes",
+          "https://huggingface.co/blog/1_58_llm_extreme_quantization",
+          "https://huggingface.co/blog/overview-quantization-transformers",
+          "https://huggingface.co/blog/rlhf",
+          "https://huggingface.co/blog/stackllama",
+          "https://huggingface.co/blog/ariG23498/rlhf-to-dpo",
+          "https://magazine.sebastianraschka.com/p/the-big-llm-architecture-comparison",
+          "https://magazine.sebastianraschka.com/p/understanding-multimodal-llms",
+          "https://magazine.sebastianraschka.com/p/state-of-llms-2025",
+          "https://magazine.sebastianraschka.com/p/using-and-finetuning-pretrained-transformers",
+          "https://eugeneyan.com/writing/llm-patterns/",
+          "https://eugeneyan.com/writing/llm-problems/",
+          "https://huyenchip.com/2023/04/11/llm-engineering.html",
+          "https://huyenchip.com/2023/08/16/llm-research-open-challenges.html",
+          "https://huyenchip.com/2025/01/16/ai-engineering-pitfalls.html",
+          "https://huyenchip.com/2024/03/14/ai-oss.html",
+          "https://blog.cloudflare.com/workers-ai/",
+          "https://blog.cloudflare.com/cloudflares-most-efficient-ai-inference-engine/",
+          "https://blog.cloudflare.com/bringing-ai-to-the-edge/",
+          "https://blog.cloudflare.com/workers-ai-bigger-better-faster/",
+          "http://karpathy.github.io/2019/04/25/recipe/",
+          "http://karpathy.github.io/2022/03/14/lecun1989/",
+          "https://unsloth.ai/blog/rl-environments",
+          "https://github.com/karpathy/autoresearch",
+          "https://paulgraham.com/greatwork.html",
+          "https://situational-awareness.ai/"
         ],
-        "children": [],
+        "children": [
+          {
+            "id": "t2",
+            "label": "Quantization",
+            "article_urls": [
+              "https://www.anthropic.com/engineering/harness-design-long-running-apps",
+              "https://www.anthropic.com/research/tracing-thoughts-language-model",
+              "https://www.anthropic.com/research/engineering-challenges-interpretability",
+              "https://www.anthropic.com/research/automated-alignment-researchers",
+              "https://lilianweng.github.io/posts/2025-05-01-thinking/",
+              "https://deepmind.google/blog/alphafold-using-ai-for-scientific-discovery-2020/",
+              "https://deepmind.google/discover/blog/ai-solves-imo-problems-at-silver-medal-level/",
+              "https://deepmind.google/blog/alphageometry-an-olympiad-level-ai-system-for-geometry/",
+              "https://research.google/blog/pathways-language-model-palm-scaling-to-540-billion-parameters-for-breakthrough-performance/",
+              "https://research.google/blog/looking-back-at-speculative-decoding/",
+              "https://research.google/blog/google-research-2022-beyond-ml-computer-systems/",
+              "https://research.google/blog/a-decoder-only-foundation-model-for-time-series-forecasting/",
+              "https://huggingface.co/blog/4bit-transformers-bitsandbytes",
+              "https://huggingface.co/blog/1_58_llm_extreme_quantization",
+              "https://huggingface.co/blog/overview-quantization-transformers",
+              "https://magazine.sebastianraschka.com/p/the-big-llm-architecture-comparison",
+              "https://magazine.sebastianraschka.com/p/state-of-llms-2025",
+              "https://huyenchip.com/2025/01/16/ai-engineering-pitfalls.html",
+              "https://huyenchip.com/2024/03/14/ai-oss.html",
+              "https://blog.cloudflare.com/workers-ai/",
+              "https://blog.cloudflare.com/cloudflares-most-efficient-ai-inference-engine/",
+              "https://blog.cloudflare.com/bringing-ai-to-the-edge/",
+              "https://blog.cloudflare.com/workers-ai-bigger-better-faster/",
+              "http://karpathy.github.io/2019/04/25/recipe/",
+              "http://karpathy.github.io/2022/03/14/lecun1989/",
+              "https://github.com/karpathy/autoresearch",
+              "https://paulgraham.com/greatwork.html",
+              "https://situational-awareness.ai/"
+            ],
+            "children": [
+              {
+                "id": "t3",
+                "label": "Using",
+                "article_urls": [
+                  "https://www.anthropic.com/engineering/harness-design-long-running-apps",
+                  "https://www.anthropic.com/research/tracing-thoughts-language-model",
+                  "https://www.anthropic.com/research/engineering-challenges-interpretability",
+                  "https://www.anthropic.com/research/automated-alignment-researchers",
+                  "https://lilianweng.github.io/posts/2025-05-01-thinking/",
+                  "https://deepmind.google/blog/alphafold-using-ai-for-scientific-discovery-2020/",
+                  "https://deepmind.google/discover/blog/ai-solves-imo-problems-at-silver-medal-level/",
+                  "https://deepmind.google/blog/alphageometry-an-olympiad-level-ai-system-for-geometry/",
+                  "https://huyenchip.com/2025/01/16/ai-engineering-pitfalls.html",
+                  "https://huyenchip.com/2024/03/14/ai-oss.html",
+                  "https://blog.cloudflare.com/workers-ai/",
+                  "https://blog.cloudflare.com/cloudflares-most-efficient-ai-inference-engine/",
+                  "https://blog.cloudflare.com/bringing-ai-to-the-edge/",
+                  "https://blog.cloudflare.com/workers-ai-bigger-better-faster/",
+                  "https://github.com/karpathy/autoresearch",
+                  "https://paulgraham.com/greatwork.html",
+                  "https://situational-awareness.ai/"
+                ],
+                "children": [
+                  {
+                    "id": "t4",
+                    "label": "Using",
+                    "article_urls": [
+                      "https://www.anthropic.com/engineering/harness-design-long-running-apps",
+                      "https://www.anthropic.com/research/tracing-thoughts-language-model",
+                      "https://www.anthropic.com/research/engineering-challenges-interpretability",
+                      "https://www.anthropic.com/research/automated-alignment-researchers",
+                      "https://lilianweng.github.io/posts/2025-05-01-thinking/",
+                      "https://deepmind.google/blog/alphafold-using-ai-for-scientific-discovery-2020/",
+                      "https://deepmind.google/discover/blog/ai-solves-imo-problems-at-silver-medal-level/",
+                      "https://deepmind.google/blog/alphageometry-an-olympiad-level-ai-system-for-geometry/",
+                      "https://huyenchip.com/2025/01/16/ai-engineering-pitfalls.html",
+                      "https://paulgraham.com/greatwork.html",
+                      "https://situational-awareness.ai/"
+                    ],
+                    "children": [],
+                    "depth": 4
+                  },
+                  {
+                    "id": "t5",
+                    "label": "Inference",
+                    "article_urls": [
+                      "https://huyenchip.com/2024/03/14/ai-oss.html",
+                      "https://blog.cloudflare.com/workers-ai/",
+                      "https://blog.cloudflare.com/cloudflares-most-efficient-ai-inference-engine/",
+                      "https://blog.cloudflare.com/bringing-ai-to-the-edge/",
+                      "https://blog.cloudflare.com/workers-ai-bigger-better-faster/",
+                      "https://github.com/karpathy/autoresearch"
+                    ],
+                    "children": [],
+                    "depth": 4
+                  }
+                ],
+                "depth": 3
+              },
+              {
+                "id": "t6",
+                "label": "Quantization",
+                "article_urls": [
+                  "https://research.google/blog/pathways-language-model-palm-scaling-to-540-billion-parameters-for-breakthrough-performance/",
+                  "https://research.google/blog/looking-back-at-speculative-decoding/",
+                  "https://research.google/blog/google-research-2022-beyond-ml-computer-systems/",
+                  "https://research.google/blog/a-decoder-only-foundation-model-for-time-series-forecasting/",
+                  "https://huggingface.co/blog/4bit-transformers-bitsandbytes",
+                  "https://huggingface.co/blog/1_58_llm_extreme_quantization",
+                  "https://huggingface.co/blog/overview-quantization-transformers",
+                  "https://magazine.sebastianraschka.com/p/the-big-llm-architecture-comparison",
+                  "https://magazine.sebastianraschka.com/p/state-of-llms-2025",
+                  "http://karpathy.github.io/2019/04/25/recipe/",
+                  "http://karpathy.github.io/2022/03/14/lecun1989/"
+                ],
+                "children": [
+                  {
+                    "id": "t7",
+                    "label": "Model",
+                    "article_urls": [
+                      "https://research.google/blog/pathways-language-model-palm-scaling-to-540-billion-parameters-for-breakthrough-performance/",
+                      "https://research.google/blog/looking-back-at-speculative-decoding/",
+                      "https://research.google/blog/google-research-2022-beyond-ml-computer-systems/",
+                      "https://research.google/blog/a-decoder-only-foundation-model-for-time-series-forecasting/",
+                      "https://magazine.sebastianraschka.com/p/the-big-llm-architecture-comparison",
+                      "https://magazine.sebastianraschka.com/p/state-of-llms-2025",
+                      "http://karpathy.github.io/2019/04/25/recipe/",
+                      "http://karpathy.github.io/2022/03/14/lecun1989/"
+                    ],
+                    "children": [],
+                    "depth": 4
+                  },
+                  {
+                    "id": "t8",
+                    "label": "Quantization",
+                    "article_urls": [
+                      "https://huggingface.co/blog/4bit-transformers-bitsandbytes",
+                      "https://huggingface.co/blog/1_58_llm_extreme_quantization",
+                      "https://huggingface.co/blog/overview-quantization-transformers"
+                    ],
+                    "children": [],
+                    "depth": 4
+                  }
+                ],
+                "depth": 3
+              }
+            ],
+            "depth": 2
+          },
+          {
+            "id": "t9",
+            "label": "Reinforcement",
+            "article_urls": [
+              "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+              "https://lilianweng.github.io/posts/2024-11-28-reward-hacking/",
+              "https://lilianweng.github.io/posts/2024-07-07-hallucination/",
+              "https://lilianweng.github.io/posts/2023-06-23-agent/",
+              "https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/",
+              "https://deepmind.google/discover/blog/deep-reinforcement-learning/",
+              "https://huggingface.co/blog/rlhf",
+              "https://huggingface.co/blog/stackllama",
+              "https://huggingface.co/blog/ariG23498/rlhf-to-dpo",
+              "https://magazine.sebastianraschka.com/p/understanding-multimodal-llms",
+              "https://magazine.sebastianraschka.com/p/using-and-finetuning-pretrained-transformers",
+              "https://eugeneyan.com/writing/llm-patterns/",
+              "https://eugeneyan.com/writing/llm-problems/",
+              "https://huyenchip.com/2023/04/11/llm-engineering.html",
+              "https://huyenchip.com/2023/08/16/llm-research-open-challenges.html",
+              "https://unsloth.ai/blog/rl-environments"
+            ],
+            "children": [
+              {
+                "id": "t10",
+                "label": "Engineering",
+                "article_urls": [
+                  "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+                  "https://lilianweng.github.io/posts/2024-07-07-hallucination/",
+                  "https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/",
+                  "https://magazine.sebastianraschka.com/p/understanding-multimodal-llms",
+                  "https://magazine.sebastianraschka.com/p/using-and-finetuning-pretrained-transformers",
+                  "https://eugeneyan.com/writing/llm-patterns/",
+                  "https://eugeneyan.com/writing/llm-problems/",
+                  "https://huyenchip.com/2023/04/11/llm-engineering.html",
+                  "https://huyenchip.com/2023/08/16/llm-research-open-challenges.html"
+                ],
+                "children": [
+                  {
+                    "id": "t11",
+                    "label": "Patterns",
+                    "article_urls": [
+                      "https://lilianweng.github.io/posts/2024-07-07-hallucination/",
+                      "https://eugeneyan.com/writing/llm-patterns/",
+                      "https://eugeneyan.com/writing/llm-problems/",
+                      "https://huyenchip.com/2023/04/11/llm-engineering.html",
+                      "https://huyenchip.com/2023/08/16/llm-research-open-challenges.html"
+                    ],
+                    "children": [],
+                    "depth": 4
+                  },
+                  {
+                    "id": "t12",
+                    "label": "Engineering",
+                    "article_urls": [
+                      "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+                      "https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/",
+                      "https://magazine.sebastianraschka.com/p/understanding-multimodal-llms",
+                      "https://magazine.sebastianraschka.com/p/using-and-finetuning-pretrained-transformers"
+                    ],
+                    "children": [],
+                    "depth": 4
+                  }
+                ],
+                "depth": 3
+              },
+              {
+                "id": "t13",
+                "label": "Reinforcement",
+                "article_urls": [
+                  "https://lilianweng.github.io/posts/2024-11-28-reward-hacking/",
+                  "https://lilianweng.github.io/posts/2023-06-23-agent/",
+                  "https://deepmind.google/discover/blog/deep-reinforcement-learning/",
+                  "https://huggingface.co/blog/rlhf",
+                  "https://huggingface.co/blog/stackllama",
+                  "https://huggingface.co/blog/ariG23498/rlhf-to-dpo",
+                  "https://unsloth.ai/blog/rl-environments"
+                ],
+                "children": [
+                  {
+                    "id": "t14",
+                    "label": "Reinforcement",
+                    "article_urls": [
+                      "https://lilianweng.github.io/posts/2024-11-28-reward-hacking/",
+                      "https://lilianweng.github.io/posts/2023-06-23-agent/",
+                      "https://deepmind.google/discover/blog/deep-reinforcement-learning/",
+                      "https://huggingface.co/blog/rlhf",
+                      "https://unsloth.ai/blog/rl-environments"
+                    ],
+                    "children": [],
+                    "depth": 4
+                  },
+                  {
+                    "id": "t15",
+                    "label": "Stackllama",
+                    "article_urls": [
+                      "https://huggingface.co/blog/stackllama",
+                      "https://huggingface.co/blog/ariG23498/rlhf-to-dpo"
+                    ],
+                    "children": [],
+                    "depth": 4
+                  }
+                ],
+                "depth": 3
+              }
+            ],
+            "depth": 2
+          }
+        ],
         "depth": 1
       },
       {
-        "id": "t2",
-        "label": "Gently",
+        "id": "t16",
+        "label": "Agents",
         "article_urls": [
+          "https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills",
+          "https://www.anthropic.com/engineering/code-execution-with-mcp",
+          "https://www.anthropic.com/engineering/building-agents-with-the-claude-agent-sdk",
+          "https://www.anthropic.com/engineering/advanced-tool-use",
+          "https://www.anthropic.com/engineering/how-we-contain-claude",
+          "https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents",
+          "https://www.anthropic.com/engineering/multi-agent-research-system",
+          "https://www.anthropic.com/engineering/writing-tools-for-agents",
+          "https://www.anthropic.com/engineering/april-23-postmortem",
+          "https://claude.com/blog/building-agents-that-reach-production-systems-with-mcp",
+          "https://huyenchip.com/2025/01/07/agents.html",
+          "https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/",
+          "https://simonwillison.net/2025/Jun/13/prompt-injection-design-patterns/",
+          "https://simonwillison.net/2025/Apr/11/camel/",
+          "https://simonwillison.net/2024/Mar/5/prompt-injection-jailbreaking/",
+          "https://blog.cloudflare.com/ai-platform/",
+          "https://stripe.com/blog/idempotency",
+          "https://stripe.com/blog/rate-limiters",
+          "https://stripe.com/blog/api-versioning",
           "https://twiecki.io/blog/2015/11/10/mcmc-sampling/",
-          "https://twiecki.io/blog/2018/05/03/copulas/"
+          "https://twiecki.io/blog/2018/05/03/copulas/",
+          "https://github.com/1st1/lat.md",
+          "https://www.news.aakashg.com/p/autoresearch-guide-for-pms"
         ],
-        "children": [],
+        "children": [
+          {
+            "id": "t17",
+            "label": "Claude",
+            "article_urls": [
+              "https://www.anthropic.com/engineering/how-we-contain-claude",
+              "https://www.anthropic.com/engineering/april-23-postmortem",
+              "https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/",
+              "https://simonwillison.net/2025/Jun/13/prompt-injection-design-patterns/",
+              "https://simonwillison.net/2025/Apr/11/camel/",
+              "https://simonwillison.net/2024/Mar/5/prompt-injection-jailbreaking/",
+              "https://stripe.com/blog/idempotency",
+              "https://stripe.com/blog/rate-limiters",
+              "https://stripe.com/blog/api-versioning",
+              "https://twiecki.io/blog/2015/11/10/mcmc-sampling/",
+              "https://twiecki.io/blog/2018/05/03/copulas/",
+              "https://github.com/1st1/lat.md",
+              "https://www.news.aakashg.com/p/autoresearch-guide-for-pms"
+            ],
+            "children": [
+              {
+                "id": "t18",
+                "label": "Claude",
+                "article_urls": [
+                  "https://www.anthropic.com/engineering/how-we-contain-claude",
+                  "https://www.anthropic.com/engineering/april-23-postmortem",
+                  "https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/",
+                  "https://simonwillison.net/2025/Jun/13/prompt-injection-design-patterns/",
+                  "https://simonwillison.net/2025/Apr/11/camel/",
+                  "https://simonwillison.net/2024/Mar/5/prompt-injection-jailbreaking/",
+                  "https://stripe.com/blog/idempotency",
+                  "https://stripe.com/blog/rate-limiters",
+                  "https://stripe.com/blog/api-versioning",
+                  "https://github.com/1st1/lat.md",
+                  "https://www.news.aakashg.com/p/autoresearch-guide-for-pms"
+                ],
+                "children": [
+                  {
+                    "id": "t19",
+                    "label": "Update",
+                    "article_urls": [
+                      "https://www.anthropic.com/engineering/april-23-postmortem",
+                      "https://stripe.com/blog/idempotency",
+                      "https://stripe.com/blog/rate-limiters",
+                      "https://stripe.com/blog/api-versioning",
+                      "https://github.com/1st1/lat.md",
+                      "https://www.news.aakashg.com/p/autoresearch-guide-for-pms"
+                    ],
+                    "children": [],
+                    "depth": 4
+                  },
+                  {
+                    "id": "t20",
+                    "label": "Agents",
+                    "article_urls": [
+                      "https://www.anthropic.com/engineering/how-we-contain-claude",
+                      "https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/",
+                      "https://simonwillison.net/2025/Jun/13/prompt-injection-design-patterns/",
+                      "https://simonwillison.net/2025/Apr/11/camel/",
+                      "https://simonwillison.net/2024/Mar/5/prompt-injection-jailbreaking/"
+                    ],
+                    "children": [],
+                    "depth": 4
+                  }
+                ],
+                "depth": 3
+              },
+              {
+                "id": "t21",
+                "label": "Gently",
+                "article_urls": [
+                  "https://twiecki.io/blog/2015/11/10/mcmc-sampling/",
+                  "https://twiecki.io/blog/2018/05/03/copulas/"
+                ],
+                "children": [],
+                "depth": 3
+              }
+            ],
+            "depth": 2
+          },
+          {
+            "id": "t22",
+            "label": "Agents",
+            "article_urls": [
+              "https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills",
+              "https://www.anthropic.com/engineering/code-execution-with-mcp",
+              "https://www.anthropic.com/engineering/building-agents-with-the-claude-agent-sdk",
+              "https://www.anthropic.com/engineering/advanced-tool-use",
+              "https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents",
+              "https://www.anthropic.com/engineering/multi-agent-research-system",
+              "https://www.anthropic.com/engineering/writing-tools-for-agents",
+              "https://claude.com/blog/building-agents-that-reach-production-systems-with-mcp",
+              "https://huyenchip.com/2025/01/07/agents.html",
+              "https://blog.cloudflare.com/ai-platform/"
+            ],
+            "children": [],
+            "depth": 2
+          }
+        ],
         "depth": 1
       }
     ],
@@ -214,39 +1147,117 @@
   },
   "lessons": [
     {
-      "topic_id": "t1",
-      "script": "**Agents** \u2014 a quick synthesis of 14 saved reads. Building agents that reach production systems with MCP | Claude adds another angle. GitHub - 1st1/lat.md: Agent Lattice: a knowledge graph for your codebase, written in markdown. adds another angle. GitHub - karpathy/autoresearch: AI agents running research on single-GPU nanochat training automatically adds another angle. The throughline: ideas here reinforce each other, so reading them together compounds faster than one at a time. (Mock lesson \u2014 swap for the grounded model output.)",
+      "topic_id": "t4",
+      "script": "**Using** \u2014 a quick synthesis of 11 saved reads. Harness design for long-running application development adds another angle. Tracing the thoughts of a large language model adds another angle. The engineering challenges of scaling interpretability adds another angle. The throughline: ideas here reinforce each other, so reading them together compounds faster than one at a time. (Mock lesson \u2014 swap for the grounded model output.)",
       "grounded": true,
-      "grounding_score": 0.84,
-      "unsupported": [],
-      "video_path": null,
-      "audio_path": null
+      "grounding_score": 0.71,
+      "audio_path": null,
+      "video_path": null
     },
     {
-      "topic_id": "t2",
+      "topic_id": "t5",
+      "script": "**Inference** \u2014 a quick synthesis of 6 saved reads. What I learned from looking at 900 most popular open source AI tools adds another angle. Workers AI: serverless GPU-powered inference on Cloudflare\u2019s global network adds another angle. How we built the most efficient inference engine for Cloudflare\u2019s network adds another angle. The throughline: ideas here reinforce each other, so reading them together compounds faster than one at a time. (Mock lesson \u2014 swap for the grounded model output.)",
+      "grounded": true,
+      "grounding_score": 0.61,
+      "audio_path": null,
+      "video_path": null
+    },
+    {
+      "topic_id": "t7",
+      "script": "**Model** \u2014 a quick synthesis of 8 saved reads. Pathways Language Model (PaLM): Scaling to 540 Billion Parameters for Breakthrou adds another angle. Looking back at speculative decoding adds another angle. Google Research, 2022 & beyond: ML & computer systems adds another angle. The throughline: ideas here reinforce each other, so reading them together compounds faster than one at a time. (Mock lesson \u2014 swap for the grounded model output.)",
+      "grounded": true,
+      "grounding_score": 0.84,
+      "audio_path": null,
+      "video_path": null
+    },
+    {
+      "topic_id": "t8",
+      "script": "**Quantization** \u2014 a quick synthesis of 3 saved reads. Making LLMs even more accessible with bitsandbytes, 4-bit quantization and QLoRA adds another angle. Fine-tuning LLMs to 1.58bit: extreme quantization made easy adds another angle. Overview of natively supported quantization schemes in \ud83e\udd17 Transformers adds another angle. The throughline: ideas here reinforce each other, so reading them together compounds faster than one at a time. (Mock lesson \u2014 swap for the grounded model output.)",
+      "grounded": false,
+      "grounding_score": 0.59,
+      "audio_path": null,
+      "video_path": null
+    },
+    {
+      "topic_id": "t11",
+      "script": "**Patterns** \u2014 a quick synthesis of 5 saved reads. Extrinsic Hallucinations in LLMs adds another angle. Patterns for Building LLM-based Systems & Products adds another angle. How to Match LLM Patterns to Problems adds another angle. The throughline: ideas here reinforce each other, so reading them together compounds faster than one at a time. (Mock lesson \u2014 swap for the grounded model output.)",
+      "grounded": true,
+      "grounding_score": 0.69,
+      "audio_path": null,
+      "video_path": null
+    },
+    {
+      "topic_id": "t12",
+      "script": "**Engineering** \u2014 a quick synthesis of 4 saved reads. Effective context engineering for AI agents adds another angle. Prompt Engineering adds another angle. Understanding Multimodal LLMs adds another angle. The throughline: ideas here reinforce each other, so reading them together compounds faster than one at a time. (Mock lesson \u2014 swap for the grounded model output.)",
+      "grounded": true,
+      "grounding_score": 0.79,
+      "audio_path": null,
+      "video_path": null
+    },
+    {
+      "topic_id": "t14",
+      "script": "**Reinforcement** \u2014 a quick synthesis of 5 saved reads. Reward Hacking in Reinforcement Learning adds another angle. LLM Powered Autonomous Agents adds another angle. Deep Reinforcement Learning adds another angle. The throughline: ideas here reinforce each other, so reading them together compounds faster than one at a time. (Mock lesson \u2014 swap for the grounded model output.)",
+      "grounded": false,
+      "grounding_score": 0.54,
+      "audio_path": null,
+      "video_path": null
+    },
+    {
+      "topic_id": "t15",
+      "script": "**Stackllama** \u2014 a quick synthesis of 2 saved reads. StackLLaMA: A hands-on guide to train LLaMA with RLHF adds another angle. Simplifying Alignment: From RLHF to Direct Preference Optimization (DPO) adds another angle. The throughline: ideas here reinforce each other, so reading them together compounds faster than one at a time. (Mock lesson \u2014 swap for the grounded model output.)",
+      "grounded": true,
+      "grounding_score": 0.72,
+      "audio_path": null,
+      "video_path": null
+    },
+    {
+      "topic_id": "t19",
+      "script": "**Update** \u2014 a quick synthesis of 6 saved reads. An update on recent Claude Code quality reports adds another angle. Designing robust and predictable APIs with idempotency adds another angle. Scaling your API with rate limiters adds another angle. The throughline: ideas here reinforce each other, so reading them together compounds faster than one at a time. (Mock lesson \u2014 swap for the grounded model output.)",
+      "grounded": true,
+      "grounding_score": 0.62,
+      "audio_path": null,
+      "video_path": null
+    },
+    {
+      "topic_id": "t20",
+      "script": "**Agents** \u2014 a quick synthesis of 5 saved reads. How we contain Claude across products adds another angle. The lethal trifecta for AI agents: private data, untrusted content, and external communication adds another angle. Design Patterns for Securing LLM Agents against Prompt Injections adds another angle. The throughline: ideas here reinforce each other, so reading them together compounds faster than one at a time. (Mock lesson \u2014 swap for the grounded model output.)",
+      "grounded": true,
+      "grounding_score": 0.72,
+      "audio_path": null,
+      "video_path": null
+    },
+    {
+      "topic_id": "t21",
       "script": "**Gently** \u2014 a quick synthesis of 2 saved reads. while my_mcmc: gently(samples) - MCMC sampling for dummies adds another angle. while my_mcmc: gently(samples) - An intuitive, visual guide to copulas adds another angle. The throughline: ideas here reinforce each other, so reading them together compounds faster than one at a time. (Mock lesson \u2014 swap for the grounded model output.)",
       "grounded": false,
-      "grounding_score": 0.5,
-      "unsupported": [],
-      "video_path": null,
-      "audio_path": null
+      "grounding_score": 0.57,
+      "audio_path": null,
+      "video_path": null
+    },
+    {
+      "topic_id": "t22",
+      "script": "**Agents** \u2014 a quick synthesis of 10 saved reads. Equipping agents for the real world with Agent Skills adds another angle. Code execution with MCP: building more efficient AI agents adds another angle. Building agents with the Claude Agent SDK | Claude adds another angle. The throughline: ideas here reinforce each other, so reading them together compounds faster than one at a time. (Mock lesson \u2014 swap for the grounded model output.)",
+      "grounded": true,
+      "grounding_score": 0.79,
+      "audio_path": null,
+      "video_path": null
     }
   ],
   "metrics": {
     "calls_by_tier": {
-      "embed": 16,
-      "weak": 20,
-      "mid": 1,
-      "strong": 2
+      "embed": 67,
+      "weak": 99,
+      "mid": 9,
+      "strong": 6
     },
-    "total_calls": 39,
-    "cost_usd": 0.04432,
-    "baseline_cost_usd": 0.46032,
-    "savings_x": 10.4,
+    "total_calls": 181,
+    "cost_usd": 0.14924,
+    "baseline_cost_usd": 2.28134,
+    "savings_x": 15.3,
     "grounding": {
-      "checked": 2,
-      "unsupported_caught": 1,
-      "catch_rate": 0.5
+      "checked": 12,
+      "unsupported_caught": 3,
+      "catch_rate": 0.25
     }
   }
 }

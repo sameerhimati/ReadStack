@@ -77,8 +77,11 @@ def build(articles: list[Article]) -> TopicNode:
             return TopicNode(id=node_id, label=label, article_urls=urls, children=[], depth=depth)
 
         # Partition into 2 via agglomerative clustering on the subset's embeddings.
+        # Ward linkage on the L2-normalized vectors (euclidean dist is monotonic
+        # with cosine here) gives BALANCED halves; average/cosine linkage chains
+        # off tiny outliers and leaves one giant blob -> a degenerate tree.
         labels = AgglomerativeClustering(
-            n_clusters=2, metric="cosine", linkage="average"
+            n_clusters=2, linkage="ward"
         ).fit_predict(unit[indices])
         groups = [[indices[j] for j in range(len(indices)) if labels[j] == g] for g in (0, 1)]
         groups = [g for g in groups if g]  # defensive: drop an empty side

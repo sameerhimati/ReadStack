@@ -24,10 +24,10 @@ _DEFAULT_TIER = {
 # --- Symbolic knobs (thresholds) ---------------------------------------------
 HERO_TOPIC_MIN_ARTICLES = 8      # a topic this big earns a stronger lesson model
 GROUNDING_ESCALATE_BELOW = 0.6   # weak verifier unsure -> escalate the check
-SPLIT_MIN_ARTICLES = 15          # clusters bigger than this may split...
+SPLIT_MIN_ARTICLES = 6           # clusters bigger than this may split...
 SPLIT_MAX_COHERENCE = 0.55       # ...only if they're also incoherent
-STOP_MAX_ARTICLES = 8            # small enough -> leaf node
-STOP_MAX_DEPTH = 3
+STOP_MAX_ARTICLES = 5            # small enough -> leaf node
+STOP_MAX_DEPTH = 4
 
 
 def route(task: Task, *, topic_size: int = 0, grounding_score: float = 1.0) -> RouteDecision:
