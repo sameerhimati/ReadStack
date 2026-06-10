@@ -1,18 +1,22 @@
 "use client";
 
-import { useMemo } from "react";
-import ReactFlow, {
-  Background,
-  BackgroundVariant,
-  type Node,
-  type NodeMouseHandler,
-} from "reactflow";
+import dynamic from "next/dynamic";
 import type { TopicNode } from "@/lib/types";
-import { layoutTopics, type TopicNodeData } from "@/lib/layout";
-import TopicGraphNode from "./TopicGraphNode";
 
-const nodeTypes = { topic: TopicGraphNode };
+// react-force-graph-2d touches window/canvas, so it can't be server-rendered.
+// We load the actual canvas component client-only via next/dynamic. ssr:false
+// is legal here because this wrapper is itself a Client Component.
+const TopicGraphCanvas = dynamic(() => import("./TopicGraphCanvas"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full w-full items-center justify-center text-xs text-[var(--muted)]">
+      Building map…
+    </div>
+  ),
+});
 
+// Public contract is unchanged from the old ReactFlow version, so page.tsx
+// keeps working as-is: render the TopicNode tree, click a topic to focus it.
 export default function TopicGraph({
   root,
   selectedId,
@@ -22,52 +26,7 @@ export default function TopicGraph({
   selectedId: string | null;
   onSelect: (id: string) => void;
 }) {
-  // Re-layout whenever the tree identity changes (new pipeline run).
-  const { nodes, edges } = useMemo(() => layoutTopics(root), [root]);
-
-  // Reflect selection into node props so the custom node can highlight.
-  const styledNodes = useMemo<Node<TopicNodeData>[]>(
-    () =>
-      nodes.map((n) => ({
-        ...n,
-        selected: n.id === selectedId,
-        draggable: false,
-        connectable: false,
-      })),
-    [nodes, selectedId]
-  );
-
-  const handleNodeClick: NodeMouseHandler = (_e, node) => {
-    // Root isn't a topic you read; clicking it is a no-op.
-    if (node.id === "root") return;
-    onSelect(node.id);
-  };
-
   return (
-    <ReactFlow
-      key={root.id + nodes.length}
-      nodes={styledNodes}
-      edges={edges}
-      nodeTypes={nodeTypes}
-      onNodeClick={handleNodeClick}
-      fitView
-      fitViewOptions={{ padding: 0.25 }}
-      proOptions={{ hideAttribution: true }}
-      nodesDraggable={false}
-      nodesConnectable={false}
-      elementsSelectable
-      panOnScroll
-      zoomOnScroll={false}
-      minZoom={0.4}
-      maxZoom={1.4}
-      className="!bg-transparent"
-    >
-      <Background
-        variant={BackgroundVariant.Dots}
-        gap={28}
-        size={1}
-        color="var(--border)"
-      />
-    </ReactFlow>
+    <TopicGraphCanvas root={root} selectedId={selectedId} onSelect={onSelect} />
   );
 }

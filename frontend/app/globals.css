@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "reactflow/dist/style.css";
 
 /* Warm editorial design system — light default, .dark toggle.
    Tokens are the single source of truth; reference them via Tailwind
@@ -63,18 +62,6 @@ body {
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-}
-
-/* React Flow theming — warm, flat, borders not glow. */
-.react-flow__attribution {
-  display: none;
-}
-.react-flow__edge-path {
-  stroke: var(--border);
-  stroke-width: 1.5;
-}
-.react-flow__handle {
-  opacity: 0;
 }
 
 /* One subtle staggered fade for the Map "bloom". No scale/bounce. */
