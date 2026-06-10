@@ -135,18 +135,15 @@ systemctl restart readstack-backend readstack-frontend
 echo "==> Caddyfile"
 cat > /etc/caddy/Caddyfile <<EOF
 $ORIGIN {
-    # API -> uvicorn
-    handle /pipeline*          { reverse_proxy 127.0.0.1:8000 }
-    handle /snapshot*          { reverse_proxy 127.0.0.1:8000 }
-    handle /add*               { reverse_proxy 127.0.0.1:8000 }
-    handle /article*           { reverse_proxy 127.0.0.1:8000 }
-    handle /lesson/*           { reverse_proxy 127.0.0.1:8000 }
-    handle /topic/*            { reverse_proxy 127.0.0.1:8000 }
-    handle /generate-media*    { reverse_proxy 127.0.0.1:8000 }
-    handle /media/*            { reverse_proxy 127.0.0.1:8000 }
-    handle /health*            { reverse_proxy 127.0.0.1:8000 }
-    # everything else -> the Next frontend
-    handle                     { reverse_proxy 127.0.0.1:3000 }
+    # API paths -> uvicorn; everything else -> the Next frontend.
+    # (Caddyfile blocks must be multi-line — '{' has to end the line.)
+    @api path /pipeline* /snapshot* /add* /article* /lesson/* /topic/* /generate-media* /media/* /health*
+    handle @api {
+        reverse_proxy 127.0.0.1:8000
+    }
+    handle {
+        reverse_proxy 127.0.0.1:3000
+    }
 }
 EOF
 systemctl reload caddy || systemctl restart caddy
