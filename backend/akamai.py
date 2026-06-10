@@ -19,8 +19,25 @@ log = logging.getLogger(__name__)
 AKAMAI_BASE = os.getenv("AKAMAI_INFERENCE_URL", "")  # set from hackathon creds
 AKAMAI_KEY = os.getenv("AKAMAI_API_KEY", "")
 
-# Mock when explicitly asked, or whenever we have no endpoint to call.
-MOCK = os.getenv("MOCK_INFERENCE", "") == "1" or not AKAMAI_BASE
+# Anthropic (Claude) is the swappable fallback brain — same router, same tiers,
+# different provider. Native Messages API (NOT OpenAI-shaped), so it gets its own
+# adapter below. Embeddings are ALWAYS local — Anthropic has no embeddings API.
+ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+ANTHROPIC_BASE = os.getenv("ANTHROPIC_BASE_URL", "https://api.anthropic.com")
+
+# Which brain answers chat(). Akamai (OpenAI-compatible: Ollama/vLLM) is the
+# headline and auto-wins once its endpoint is set; Claude is the fallback; mock
+# otherwise. Explicit MOCK_INFERENCE=1 always wins (offline dev).
+if os.getenv("MOCK_INFERENCE", "") == "1":
+    PROVIDER = "mock"
+elif AKAMAI_BASE:
+    PROVIDER = "akamai"
+elif ANTHROPIC_KEY:
+    PROVIDER = "anthropic"
+else:
+    PROVIDER = "mock"
+
+MOCK = PROVIDER == "mock"
 
 # tier -> model id. Overridable by env so going live is a config flip, not a code
 # edit: at the event just export AKAMAI_MODEL_WEAK=... to match what vLLM serves.
@@ -31,6 +48,14 @@ MODEL = {
     "mid": os.getenv("AKAMAI_MODEL_MID", "llama-3.3-70b-instruct"),
     "strong": os.getenv("AKAMAI_MODEL_STRONG", "llama-3.1-405b-instruct"),
     "embed": os.getenv("AKAMAI_MODEL_EMBED", "bge-large-en-v1.5"),
+}
+
+# Two-tier Claude routing (cheap Haiku for volume, Sonnet for what a human
+# consumes). STRONG collapses to Sonnet — no Opus tier. Embed unused (local).
+ANTHROPIC_MODEL = {
+    "weak": os.getenv("ANTHROPIC_MODEL_WEAK", "claude-haiku-4-5"),
+    "mid": os.getenv("ANTHROPIC_MODEL_MID", "claude-sonnet-4-6"),
+    "strong": os.getenv("ANTHROPIC_MODEL_STRONG", "claude-sonnet-4-6"),
 }
 
 # Bound every call: cap output (latency + cost — a runaway generation can't stall
@@ -59,6 +84,13 @@ async def chat(
     """
     if MOCK:
         return _mock_chat(tier, prompt, system)
+    if PROVIDER == "anthropic":
+        return await _anthropic_chat(tier, prompt, system, max_tokens, temperature)
+    return await _openai_chat(tier, prompt, system, max_tokens, temperature)
+
+
+async def _openai_chat(tier: str, prompt: str, system: str, max_tokens: int, temperature: float) -> str:
+    """OpenAI-compatible endpoint — Akamai-hosted Ollama / vLLM."""
     messages = ([{"role": "system", "content": system}] if system else []) + [
         {"role": "user", "content": prompt}
     ]
@@ -85,9 +117,41 @@ async def chat(
     return ""
 
 
+async def _anthropic_chat(tier: str, prompt: str, system: str, max_tokens: int, temperature: float) -> str:
+    """Native Anthropic Messages API (Claude). Two-tier: Haiku (weak) / Sonnet (mid+strong)."""
+    body: dict = {
+        "model": ANTHROPIC_MODEL.get(tier, ANTHROPIC_MODEL["weak"]),
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+        "messages": [{"role": "user", "content": prompt}],
+    }
+    if system:
+        body["system"] = system
+    headers = {
+        "x-api-key": ANTHROPIC_KEY,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+    }
+    last_err: Exception | None = None
+    for _ in range(_RETRIES + 1):
+        try:
+            async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+                r = await client.post(
+                    f"{ANTHROPIC_BASE}/v1/messages", headers=headers, json=body
+                )
+                r.raise_for_status()
+                blocks = r.json().get("content", [])
+                return "".join(b.get("text", "") for b in blocks if b.get("type") == "text")
+        except (httpx.HTTPError, KeyError, IndexError) as exc:
+            last_err = exc
+    log.warning("anthropic.chat failed (tier=%s): %s", tier, last_err)
+    return ""
+
+
 async def embed(texts: list[str]) -> list[list[float]]:
-    """Embed via Akamai; fall back to a local model if it's unreachable."""
-    if not MOCK:
+    """Embed via the Akamai endpoint when configured; else local (Anthropic has
+    no embeddings API, so the Claude/mock paths always embed locally)."""
+    if PROVIDER == "akamai" and AKAMAI_BASE:
         try:
             async with httpx.AsyncClient(timeout=60) as client:
                 r = await client.post(
