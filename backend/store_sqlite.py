@@ -50,6 +50,15 @@ def init_db() -> None:
             )
             """
         )
+        c.execute(
+            """
+            CREATE TABLE IF NOT EXISTS overrides (
+                id         INTEGER PRIMARY KEY CHECK (id = 1),
+                json       TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
 
 
 def _pack(embedding: list[float] | None) -> bytes | None:
@@ -126,3 +135,22 @@ def load_snapshot() -> dict | None:
     with _conn() as c:
         row = c.execute("SELECT json FROM snapshot WHERE id = 1").fetchone()
     return json.loads(row["json"]) if row else None
+
+
+def save_overrides(overrides: dict) -> None:
+    """Persist the user's curation (renamed labels + pinned article assignments)."""
+    with _conn() as c:
+        c.execute(
+            """
+            INSERT INTO overrides (id, json, updated_at) VALUES (1, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET json=excluded.json, updated_at=excluded.updated_at
+            """,
+            (json.dumps(overrides), datetime.now(timezone.utc).isoformat()),
+        )
+
+
+def load_overrides() -> dict:
+    """Curation overrides, or an empty dict when the user hasn't curated anything."""
+    with _conn() as c:
+        row = c.execute("SELECT json FROM overrides WHERE id = 1").fetchone()
+    return json.loads(row["json"]) if row else {}

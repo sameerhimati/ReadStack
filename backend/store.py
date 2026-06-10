@@ -19,7 +19,9 @@ if os.getenv("DATABASE_URL"):
         all_articles,
         article_count,
         init_db,
+        load_overrides,
         load_snapshot,
+        save_overrides,
         save_snapshot,
         upsert_article,
     )
@@ -30,7 +32,9 @@ else:
         all_articles,
         article_count,
         init_db,
+        load_overrides,
         load_snapshot,
+        save_overrides,
         save_snapshot,
         upsert_article,
     )

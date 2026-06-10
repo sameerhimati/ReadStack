@@ -61,11 +61,21 @@ class IngestRequest(BaseModel):
 
 class AddRequest(BaseModel):
     url: str
+    topic_id: str | None = None   # optional: drop straight into this topic
 
 
 class RegenerateRequest(BaseModel):
     topic_id: str
     length: str = "medium"
+
+
+class LabelRequest(BaseModel):
+    label: str
+
+
+class MoveRequest(BaseModel):
+    url: str
+    topic_id: str
 
 
 _LENGTHS = {"short", "medium", "long"}
@@ -95,6 +105,13 @@ async def _rebuild_from_store() -> dict:
     tree = cluster.build(articles)
     by_url = {a.url: a for a in articles}
 
+    # Honor the user's pinned assignments before naming, so labels reflect the
+    # curated membership. (Build is deterministic, so topic ids are stable across
+    # rebuilds on an unchanged corpus; a stale target just no-ops.)
+    overrides = _overrides()
+    for url, topic_id in overrides["assignments"].items():
+        _move_url(tree, url, topic_id)
+
     # Relabel parent-before-child so each child can avoid repeating its parent's
     # label (no more "Reinforcement -> Reinforcement"); children must be facets.
     async def _relabel(node, parent_label):
@@ -107,6 +124,10 @@ async def _rebuild_from_store() -> dict:
             await _relabel(child, node.label)
 
     await _relabel(tree, None)
+
+    # User-renamed labels win over the auto names (applied after relabel).
+    for topic_id, label in overrides["labels"].items():
+        _set_label(tree, topic_id, label)
 
     lessons = []
     leaves = [
@@ -165,6 +186,12 @@ async def add(req: AddRequest):
     if not stored:
         return {"ok": False, "error": "Could not fetch or extract that URL."}
 
+    # If the user picked a target topic, pin it now so any rebuild respects it too.
+    if req.topic_id:
+        ov = _overrides()
+        ov["assignments"][req.url] = req.topic_id
+        store.save_overrides(ov)
+
     _adds_since_rebuild += 1
 
     # No structure yet, or time for a refresh -> full rebuild and find the new article.
@@ -176,8 +203,16 @@ async def add(req: AddRequest):
         return {"ok": True, "rebuilt": True, "topic": topic,
                 "lesson": _lesson_for(snapshot, topic), "snapshot": snapshot}
 
-    # Incremental: assign to the nearest existing top-topic centroid, patch the snapshot.
-    topic = _assign_nearest(req.url, snapshot)
+    # Incremental: pin to the chosen topic if given, else the nearest centroid.
+    if req.topic_id:
+        tree = TopicNode.model_validate(snapshot["topics"])
+        if _move_url(tree, req.url, req.topic_id):
+            snapshot["topics"] = tree.model_dump()
+            topic = _find_top_topic(snapshot["topics"], req.url)
+        else:
+            topic = _assign_nearest(req.url, snapshot)
+    else:
+        topic = _assign_nearest(req.url, snapshot)
     store.save_snapshot(snapshot)
     return {"ok": True, "rebuilt": False, "topic": topic,
             "lesson": _lesson_for(snapshot, topic), "snapshot": snapshot}
@@ -215,6 +250,52 @@ def _unit(vec: np.ndarray) -> np.ndarray:
     return vec / n if n else vec
 
 
+# --- curation overrides (rename topics, pin articles) ------------------------
+def _overrides() -> dict:
+    """Load the user's curation, normalized to {labels: {...}, assignments: {...}}."""
+    ov = store.load_overrides() or {}
+    ov.setdefault("labels", {})        # {topic_id: label}
+    ov.setdefault("assignments", {})   # {url: topic_id}
+    return ov
+
+
+def _has_node(node: TopicNode, topic_id: str) -> bool:
+    return node.id == topic_id or any(_has_node(c, topic_id) for c in node.children)
+
+
+def _set_label(node: TopicNode, topic_id: str, label: str) -> bool:
+    if node.id == topic_id:
+        node.label = label
+        return True
+    return any(_set_label(c, topic_id, label) for c in node.children)
+
+
+def _remove_url(node: TopicNode, url: str) -> None:
+    if url in node.article_urls:
+        node.article_urls.remove(url)
+    for c in node.children:
+        _remove_url(c, url)
+
+
+def _add_url_to_topic(node: TopicNode, url: str, topic_id: str) -> bool:
+    """Add url to the target node and every ancestor; True if target is in this subtree."""
+    found_below = any([_add_url_to_topic(c, url, topic_id) for c in node.children])
+    if node.id == topic_id or found_below:
+        if url not in node.article_urls:
+            node.article_urls.append(url)
+        return True
+    return False
+
+
+def _move_url(tree: TopicNode, url: str, topic_id: str) -> bool:
+    """Re-home url under topic_id. No-op (returns False) if the target is gone, so a
+    stale override never orphans an article out of the tree."""
+    if not _has_node(tree, topic_id):
+        return False
+    _remove_url(tree, url)
+    return _add_url_to_topic(tree, url, topic_id)
+
+
 def _find_top_topic(topics: dict | None, url: str) -> dict | None:
     for top in (topics or {}).get("children", []):
         if url in top.get("article_urls", []):
@@ -237,6 +318,49 @@ def _load_corpus() -> list[str]:
     if not _CORPUS.exists():
         return []
     return [ln.strip() for ln in _CORPUS.read_text().splitlines() if ln.strip()]
+
+
+@app.patch("/topic/{topic_id}/label")
+def rename_topic(topic_id: str, req: LabelRequest):
+    """Rename a topic. Patches the live snapshot and persists the override so a
+    rebuild keeps the user's name instead of reverting to the auto label."""
+    label = req.label.strip()
+    if not label:
+        return {"ok": False, "error": "Label can't be empty."}
+    snapshot = store.load_snapshot()
+    if snapshot is None or snapshot.get("topics") is None:
+        return {"ok": False, "error": "No stack yet — build the pipeline first."}
+
+    tree = TopicNode.model_validate(snapshot["topics"])
+    if not _set_label(tree, topic_id, label):
+        return {"ok": False, "error": f"Unknown topic {topic_id}."}
+    snapshot["topics"] = tree.model_dump()
+    store.save_snapshot(snapshot)
+
+    ov = _overrides()
+    ov["labels"][topic_id] = label
+    store.save_overrides(ov)
+    return {"ok": True, "topic_id": topic_id, "label": label}
+
+
+@app.post("/article/move")
+def move_article(req: MoveRequest):
+    """Move an article into a chosen topic, overriding the centroid guess. Patches
+    the live snapshot and persists the pin so rebuilds respect it."""
+    snapshot = store.load_snapshot()
+    if snapshot is None or snapshot.get("topics") is None:
+        return {"ok": False, "error": "No stack yet — build the pipeline first."}
+
+    tree = TopicNode.model_validate(snapshot["topics"])
+    if not _move_url(tree, req.url, req.topic_id):
+        return {"ok": False, "error": f"Unknown topic {req.topic_id}."}
+    snapshot["topics"] = tree.model_dump()
+    store.save_snapshot(snapshot)
+
+    ov = _overrides()
+    ov["assignments"][req.url] = req.topic_id
+    store.save_overrides(ov)
+    return {"ok": True, "url": req.url, "topic_id": req.topic_id, "snapshot": snapshot}
 
 
 @app.post("/lesson/regenerate")
