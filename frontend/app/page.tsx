@@ -10,6 +10,7 @@ import ReadingView from "@/components/ReadingView";
 import TopicGraph from "@/components/TopicGraph";
 import MetricPanel from "@/components/MetricPanel";
 import AddLinksPanel from "@/components/AddLinksPanel";
+import Reader from "@/components/Reader";
 
 export default function Home() {
   const [data, setData] = useState<PipelineResponse>(MOCK);
@@ -19,6 +20,8 @@ export default function Home() {
   const [addOpen, setAddOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const [focusTopicId, setFocusTopicId] = useState<string | null>(null);
+  // The article currently open in the in-app reader slide-over (null = closed).
+  const [openArticleUrl, setOpenArticleUrl] = useState<string | null>(null);
 
   // Topic section refs so Map clicks can scroll the Reading list.
   const topicRefs = useRef(new Map<string, HTMLElement>());
@@ -166,6 +169,7 @@ export default function Home() {
             onLessonUpdated={handleLessonUpdated}
             onTopicRenamed={handleTopicRenamed}
             onSnapshotReplaced={handleSnapshotReplaced}
+            onReadArticle={setOpenArticleUrl}
           />
         )}
 
@@ -195,6 +199,8 @@ export default function Home() {
         loading={loading}
         topicOptions={topicOptions}
       />
+
+      <Reader url={openArticleUrl} onClose={() => setOpenArticleUrl(null)} />
     </div>
   );
 }

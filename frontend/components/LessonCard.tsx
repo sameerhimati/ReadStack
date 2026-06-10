@@ -157,6 +157,7 @@ export function SourceList({
   currentTopicId,
   topicOptions,
   onSnapshotReplaced,
+  onReadArticle,
 }: {
   urls: string[];
   articleByUrl: Map<string, Article>;
@@ -165,6 +166,7 @@ export function SourceList({
   currentTopicId: string;
   topicOptions: TopicOption[];
   onSnapshotReplaced: (snapshot: PipelineResponse) => void;
+  onReadArticle: (url: string) => void;
 }) {
   const count = urls.length;
   // The topics an article can move into: every leaf lesson except this one.
@@ -209,6 +211,16 @@ export function SourceList({
                     targets={targets}
                     onSnapshotReplaced={onSnapshotReplaced}
                   />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onReadArticle(url);
+                    }}
+                    className="text-xs text-[var(--muted)] transition-colors hover:text-[var(--accent)]"
+                  >
+                    Read
+                  </button>
                   <a
                     href={url}
                     target="_blank"

@@ -154,6 +154,49 @@ export async function regenerateLesson(
   }
 }
 
+// GET the extracted full text of a saved article for the in-app reader.
+// `text` is plain Readability output (paragraphs separated by newlines — NOT
+// markdown). Parses defensively; on ANY failure (network, non-200, ok:false,
+// malformed body) returns { ok: false } so the Reader can show an error state
+// instead of crashing.
+export type ArticleContent = {
+  url: string;
+  title: string;
+  text: string;
+  tags: string[];
+};
+
+export type ArticleResponse =
+  | { ok: true; article: ArticleContent }
+  | { ok: false; error?: string };
+
+export async function fetchArticle(url: string): Promise<ArticleResponse> {
+  try {
+    const res = await fetch(
+      `${API_URL}/article?url=${encodeURIComponent(url)}`,
+      { cache: "no-store" }
+    );
+    if (!res.ok) throw new Error(`article returned ${res.status}`);
+    const data = (await res.json()) as
+      | ({ ok: true } & ArticleContent)
+      | { ok: false; error?: string };
+    if (!data || !data.ok || typeof data.text !== "string") {
+      throw new Error("article returned an unsuccessful/invalid body");
+    }
+    return {
+      ok: true,
+      article: {
+        url: data.url,
+        title: data.title ?? url,
+        text: data.text,
+        tags: Array.isArray(data.tags) ? data.tags : [],
+      },
+    };
+  } catch {
+    return { ok: false };
+  }
+}
+
 // Resolve a stored audio_path (may be a bare filename or a path) to the
 // backend's /media/<file> route.
 export function mediaUrl(audioPath: string): string {

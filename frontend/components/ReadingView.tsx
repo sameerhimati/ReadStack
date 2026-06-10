@@ -29,6 +29,7 @@ export default function ReadingView({
   onLessonUpdated,
   onTopicRenamed,
   onSnapshotReplaced,
+  onReadArticle,
 }: {
   data: PipelineResponse;
   lessonByTopic: Map<string, Lesson>;
@@ -39,6 +40,7 @@ export default function ReadingView({
   onLessonUpdated: (updated: Lesson) => void;
   onTopicRenamed: (topicId: string, label: string) => void;
   onSnapshotReplaced: (snapshot: PipelineResponse) => void;
+  onReadArticle: (url: string) => void;
 }) {
   const items = useMemo(
     () => deriveLessonItems(data, lessonByTopic),
@@ -72,6 +74,7 @@ export default function ReadingView({
           onLessonUpdated={onLessonUpdated}
           onTopicRenamed={onTopicRenamed}
           onSnapshotReplaced={onSnapshotReplaced}
+          onReadArticle={onReadArticle}
         />
       )}
 
@@ -91,6 +94,7 @@ export default function ReadingView({
                 onLessonUpdated={onLessonUpdated}
                 onTopicRenamed={onTopicRenamed}
                 onSnapshotReplaced={onSnapshotReplaced}
+                onReadArticle={onReadArticle}
               />
             ))}
           </div>
@@ -111,6 +115,7 @@ function FeaturedLesson({
   onLessonUpdated,
   onTopicRenamed,
   onSnapshotReplaced,
+  onReadArticle,
 }: {
   item: LessonItem;
   articleByUrl: Map<string, Article>;
@@ -119,6 +124,7 @@ function FeaturedLesson({
   onLessonUpdated: (updated: Lesson) => void;
   onTopicRenamed: (topicId: string, label: string) => void;
   onSnapshotReplaced: (snapshot: PipelineResponse) => void;
+  onReadArticle: (url: string) => void;
 }) {
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -176,6 +182,7 @@ function FeaturedLesson({
           currentTopicId={item.id}
           topicOptions={topicOptions}
           onSnapshotReplaced={onSnapshotReplaced}
+          onReadArticle={onReadArticle}
         />
         <div className="ml-auto flex items-center gap-2">
           <span className="text-[11px] uppercase tracking-wider text-[var(--muted)]">
@@ -198,6 +205,7 @@ function LessonListCard({
   onLessonUpdated,
   onTopicRenamed,
   onSnapshotReplaced,
+  onReadArticle,
 }: {
   item: LessonItem;
   articleByUrl: Map<string, Article>;
@@ -206,6 +214,7 @@ function LessonListCard({
   onLessonUpdated: (updated: Lesson) => void;
   onTopicRenamed: (topicId: string, label: string) => void;
   onSnapshotReplaced: (snapshot: PipelineResponse) => void;
+  onReadArticle: (url: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
@@ -275,6 +284,7 @@ function LessonListCard({
           currentTopicId={item.id}
           topicOptions={topicOptions}
           onSnapshotReplaced={onSnapshotReplaced}
+          onReadArticle={onReadArticle}
         />
       </div>
     </section>

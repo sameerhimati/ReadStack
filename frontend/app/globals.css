@@ -90,6 +90,31 @@ body {
   animation: bloom 0.35s ease-out both;
 }
 
+/* Reader slide-over — backdrop fade + panel slide from the right. Subtle,
+   ~200ms, matching the editorial restraint (no bounce/scale). */
+@keyframes reader-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes reader-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.animate-reader-fade {
+  animation: reader-fade 0.2s ease-out both;
+}
+.animate-reader-slide-in {
+  animation: reader-slide-in 0.22s ease-out both;
+}
+
 /* Native audio control — neutral so it sits in the warm theme. */
 audio {
   width: 100%;

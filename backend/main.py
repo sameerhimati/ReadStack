@@ -401,6 +401,18 @@ async def regenerate_lesson(req: RegenerateRequest):
     return {"ok": True, "lesson": new_lesson, "length": length}
 
 
+@app.get("/article")
+def article(url: str):
+    """The stored, extracted text for one article — powers the in-app reader so a
+    lesson's sources open in a panel instead of a new tab. Embedding is omitted
+    (too large and useless to the client)."""
+    for a in store.all_articles():
+        if a.url == url:
+            return {"ok": True, "url": a.url, "title": a.title,
+                    "text": a.text, "tags": a.tags}
+    return {"ok": False, "error": "That article isn't in the stack."}
+
+
 @app.get("/snapshot")
 def snapshot():
     """Read-only cached pipeline output — ZERO inference.
