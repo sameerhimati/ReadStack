@@ -42,6 +42,7 @@ class Lesson(BaseModel):
     script: str
     grounded: bool = False
     grounding_score: float = 0.0
+    audio_path: str | None = None   # narrated audio from Magnific (module E)
     video_path: str | None = None
 
 
