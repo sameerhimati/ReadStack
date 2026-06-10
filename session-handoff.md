@@ -33,10 +33,15 @@ The vertical slice ships; next session is quality. Backlog from Sameer post-reco
    After adding, re-bake (`POST /pipeline`) and eyeball the tree depth/breadth.
    (Started this session — see "Completed since record".)
 5. **Better grouping / hierarchy** — Sameer wants the topic hierarchy to *group sources
-   more intuitively*. Beyond diversifying (item 4): are the top cuts the right ones?
-   balance depth, lean on real `cluster_name` labels (not provisional tags), maybe
-   reorder facets by semantic distance so siblings read as a coherent family. The
-   grouping should look "obviously right" to a human skimming the map.
+   more intuitively*. Concrete bug observed after diversifying (item 4): the ~21 new
+   Wikipedia articles (physics + biology + history) collapse into ONE top node instead
+   of three — nomic weights the shared encyclopedic *register* over the topical
+   difference, so "Roman Empire" sits next to "General Relativity". The food articles
+   DID split out, so it's not all-or-nothing. Fix ideas: subdivide large mixed nodes
+   more eagerly (lower the split bar for big nodes / second-pass on register-dominated
+   clusters), or down-weight style vs topic. Also: real `cluster_name` labels (not mock
+   tags), balance depth, reorder facets by semantic distance. Should look "obviously
+   right" to a human skimming the map.
 6. **Move parts of the graph** — let the user drag/reposition nodes on the force map
    (currently `enableNodeDrag={false}` in `TopicGraphCanvas.tsx`). Enable drag + PIN
    dragged nodes (set `fx`/`fy` on dragend so they stay put), and revisit the initial
