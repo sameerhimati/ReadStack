@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { addUrl } from "@/lib/api";
+import type { TopicOption } from "@/lib/lessons";
 
 // Small modal to add a single link. POSTs {url} to /add and reports back so the
 // page can optimistically show it landing. "Load demo corpus" reruns /pipeline
@@ -12,14 +13,18 @@ export default function AddLinksPanel({
   onAdded,
   onLoadDemo,
   loading,
+  topicOptions,
 }: {
   open: boolean;
   onClose: () => void;
   onAdded: (url: string) => void;
   onLoadDemo: () => void;
   loading: boolean;
+  topicOptions: TopicOption[];
 }) {
   const [url, setUrl] = useState("");
+  // "" => Auto (smart sort); otherwise the pinned topic id.
+  const [topicId, setTopicId] = useState("");
   const [status, setStatus] = useState<"idle" | "adding" | "ok" | "error">(
     "idle"
   );
@@ -28,6 +33,7 @@ export default function AddLinksPanel({
   useEffect(() => {
     if (open) {
       setUrl("");
+      setTopicId("");
       setStatus("idle");
     }
   }, [open]);
@@ -49,7 +55,7 @@ export default function AddLinksPanel({
     if (!trimmed) return;
     setStatus("adding");
     try {
-      await addUrl(trimmed);
+      await addUrl(trimmed, topicId || undefined);
       setStatus("ok");
       onAdded(trimmed);
       setTimeout(onClose, 600);
@@ -96,6 +102,24 @@ export default function AddLinksPanel({
             {status === "adding" ? "Adding…" : "Add"}
           </button>
         </div>
+
+        {topicOptions.length > 0 && (
+          <label className="mt-3 flex items-center gap-2 text-xs text-[var(--muted)]">
+            <span className="shrink-0 uppercase tracking-wider">Topic</span>
+            <select
+              value={topicId}
+              onChange={(e) => setTopicId(e.target.value)}
+              className="min-w-0 flex-1 rounded-md border border-[var(--border)] bg-[var(--paper)] px-2 py-1.5 text-sm text-[var(--ink)] outline-none transition-colors focus:border-[var(--accent)]"
+            >
+              <option value="">Auto (smart sort)</option>
+              {topicOptions.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         {status === "ok" && (
           <p className="mt-3 text-xs text-[var(--verified)]">

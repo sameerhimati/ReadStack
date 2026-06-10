@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Article, Lesson, PipelineResponse } from "@/lib/types";
+import type { Article, Lesson, PipelineResponse, TopicNode } from "@/lib/types";
 import { buildStack, fetchSnapshot } from "@/lib/api";
+import { deriveTopicOptions } from "@/lib/lessons";
 import { MOCK } from "@/lib/mock";
 import Nav, { type Tab } from "@/components/Nav";
 import ReadingView from "@/components/ReadingView";
@@ -69,6 +70,12 @@ export default function Home() {
     return m;
   }, [data]);
 
+  // The leaf topics curation menus target (Move-to, Add-link picker).
+  const topicOptions = useMemo(
+    () => deriveTopicOptions(data, lessonByTopic),
+    [data, lessonByTopic]
+  );
+
   async function loadCorpus() {
     setLoading(true);
     const { data: result, usedMock: mock } = await buildStack([]);
@@ -97,6 +104,25 @@ export default function Home() {
         l.topic_id === updated.topic_id ? updated : l
       ),
     }));
+  }, []);
+
+  // Rename a topic in place: walk the tree and set the matching node's label.
+  // Since the lesson cards, the home list titles, and the topic graph all derive
+  // from `data.topics`, updating the node here flows the new label everywhere on
+  // the next render. Pure metadata — no lessons or articles change.
+  const handleTopicRenamed = useCallback((topicId: string, label: string) => {
+    const relabel = (node: TopicNode): TopicNode => {
+      const next = node.id === topicId ? { ...node, label } : node;
+      if (next.children.length === 0) return next;
+      return { ...next, children: next.children.map(relabel) };
+    };
+    setData((prev) => ({ ...prev, topics: relabel(prev.topics) }));
+  }, []);
+
+  // Replace the whole page source of truth with a server snapshot. Used after an
+  // article move, where the backend already re-derived every affected topic.
+  const handleSnapshotReplaced = useCallback((snapshot: PipelineResponse) => {
+    setData(snapshot);
   }, []);
 
   function focusTopic(id: string) {
@@ -134,9 +160,12 @@ export default function Home() {
             data={data}
             lessonByTopic={lessonByTopic}
             articleByUrl={articleByUrl}
+            topicOptions={topicOptions}
             focusTopicId={focusTopicId}
             registerTopicRef={registerTopicRef}
             onLessonUpdated={handleLessonUpdated}
+            onTopicRenamed={handleTopicRenamed}
+            onSnapshotReplaced={handleSnapshotReplaced}
           />
         )}
 
@@ -164,6 +193,7 @@ export default function Home() {
         onAdded={handleAdded}
         onLoadDemo={loadCorpus}
         loading={loading}
+        topicOptions={topicOptions}
       />
     </div>
   );

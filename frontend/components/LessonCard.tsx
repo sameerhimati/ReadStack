@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import type { Article, Lesson, LessonLength } from "@/lib/types";
-import { mediaUrl, regenerateLesson } from "@/lib/api";
-import { hostOf } from "@/lib/lessons";
+import type { Article, Lesson, LessonLength, PipelineResponse } from "@/lib/types";
+import { mediaUrl, moveArticle, regenerateLesson } from "@/lib/api";
+import { hostOf, type TopicOption } from "@/lib/lessons";
 
 const LENGTHS: { value: LessonLength; label: string }[] = [
   { value: "short", label: "Short" },
@@ -154,13 +154,21 @@ export function SourceList({
   articleByUrl,
   open,
   onToggle,
+  currentTopicId,
+  topicOptions,
+  onSnapshotReplaced,
 }: {
   urls: string[];
   articleByUrl: Map<string, Article>;
   open: boolean;
   onToggle: () => void;
+  currentTopicId: string;
+  topicOptions: TopicOption[];
+  onSnapshotReplaced: (snapshot: PipelineResponse) => void;
 }) {
   const count = urls.length;
+  // The topics an article can move into: every leaf lesson except this one.
+  const targets = topicOptions.filter((t) => t.id !== currentTopicId);
   return (
     <div>
       <button
@@ -195,18 +203,111 @@ export function SourceList({
                 <span className="text-xs text-[var(--muted)]">
                   {hostOf(url)}
                 </span>
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="ml-auto shrink-0 text-xs text-[var(--muted)] transition-colors hover:text-[var(--accent)]"
-                >
-                  Open ↗
-                </a>
+                <div className="ml-auto flex shrink-0 items-baseline gap-3">
+                  <MoveMenu
+                    url={url}
+                    targets={targets}
+                    onSnapshotReplaced={onSnapshotReplaced}
+                  />
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-xs text-[var(--muted)] transition-colors hover:text-[var(--accent)]"
+                  >
+                    Open ↗
+                  </a>
+                </div>
               </div>
             );
           })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Per-source "Move →" affordance: a muted button that opens a small menu of the
+// other leaf topics. Selecting one calls moveArticle; the backend returns the
+// full re-derived snapshot, which we lift to page state via onSnapshotReplaced
+// so every affected topic, card, and source list updates at once. Plain
+// controlled-open state — closes on outside click, Escape, or a successful move.
+function MoveMenu({
+  url,
+  targets,
+  onSnapshotReplaced,
+}: {
+  url: string;
+  targets: TopicOption[];
+  onSnapshotReplaced: (snapshot: PipelineResponse) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("mousedown", onDown);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("mousedown", onDown);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  if (targets.length === 0) return null;
+
+  async function moveTo(topicId: string) {
+    if (busy) return;
+    setBusy(true);
+    const res = await moveArticle(url, topicId);
+    setBusy(false);
+    if (res.ok) onSnapshotReplaced(res.snapshot);
+    setOpen(false);
+  }
+
+  return (
+    <div ref={wrapRef} className="relative">
+      <button
+        type="button"
+        disabled={busy}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        className="text-xs text-[var(--muted)] transition-colors hover:text-[var(--accent)] disabled:opacity-50"
+      >
+        {busy ? "Moving…" : "Move →"}
+      </button>
+      {open && (
+        <div
+          role="menu"
+          onClick={(e) => e.stopPropagation()}
+          className="absolute right-0 z-10 mt-1.5 max-h-64 w-56 overflow-auto rounded-md border border-[var(--border)] bg-[var(--surface)] p-1 shadow-lg shadow-black/10"
+        >
+          <p className="px-2 py-1.5 text-[11px] uppercase tracking-wider text-[var(--muted)]">
+            Move to
+          </p>
+          {targets.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="menuitem"
+              onClick={() => moveTo(t.id)}
+              className="block w-full truncate rounded px-2 py-1.5 text-left text-sm text-[var(--ink)] transition-colors hover:bg-[color-mix(in_oklab,var(--accent)_12%,transparent)] hover:text-[var(--accent)]"
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
       )}
     </div>

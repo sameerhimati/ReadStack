@@ -47,6 +47,33 @@ export function deriveLessonItems(
   return items;
 }
 
+// A pickable target topic for curation menus (Move-to, Add-link picker): the
+// leaf topics that map to a lesson, flattened in the same tree order the home
+// list uses. Mirrors `deriveLessonItems`' walk but only needs id + label.
+export type TopicOption = { id: string; label: string };
+
+export function deriveTopicOptions(
+  data: PipelineResponse,
+  lessonByTopic: Map<string, Lesson>
+): TopicOption[] {
+  const options: TopicOption[] = [];
+
+  const pushLeaf = (topic: TopicNode) => {
+    if (!lessonByTopic.has(topic.id)) return;
+    options.push({ id: topic.id, label: topic.label });
+  };
+
+  for (const top of data.topics.children) {
+    if (top.children.length === 0) {
+      pushLeaf(top);
+    } else {
+      top.children.forEach(pushLeaf);
+    }
+  }
+
+  return options;
+}
+
 // The hero: the first lesson with audio attached (the NotebookLM moment), else
 // the most-grounded lesson. Returns null only when there are no items at all.
 export function pickFeatured(items: LessonItem[]): LessonItem | null {

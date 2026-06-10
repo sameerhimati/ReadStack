@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Article, Lesson, PipelineResponse } from "@/lib/types";
+import { renameTopic } from "@/lib/api";
 import {
   deriveLessonItems,
   firstSentences,
   pickFeatured,
   type LessonItem,
+  type TopicOption,
 } from "@/lib/lessons";
 import {
   AudioPlayer,
@@ -22,15 +24,21 @@ export default function ReadingView({
   data,
   lessonByTopic,
   articleByUrl,
+  topicOptions,
   registerTopicRef,
   onLessonUpdated,
+  onTopicRenamed,
+  onSnapshotReplaced,
 }: {
   data: PipelineResponse;
   lessonByTopic: Map<string, Lesson>;
   articleByUrl: Map<string, Article>;
+  topicOptions: TopicOption[];
   focusTopicId: string | null;
   registerTopicRef: (id: string, el: HTMLElement | null) => void;
   onLessonUpdated: (updated: Lesson) => void;
+  onTopicRenamed: (topicId: string, label: string) => void;
+  onSnapshotReplaced: (snapshot: PipelineResponse) => void;
 }) {
   const items = useMemo(
     () => deriveLessonItems(data, lessonByTopic),
@@ -59,8 +67,11 @@ export default function ReadingView({
         <FeaturedLesson
           item={featured}
           articleByUrl={articleByUrl}
+          topicOptions={topicOptions}
           registerTopicRef={registerTopicRef}
           onLessonUpdated={onLessonUpdated}
+          onTopicRenamed={onTopicRenamed}
+          onSnapshotReplaced={onSnapshotReplaced}
         />
       )}
 
@@ -75,8 +86,11 @@ export default function ReadingView({
                 key={item.id}
                 item={item}
                 articleByUrl={articleByUrl}
+                topicOptions={topicOptions}
                 registerTopicRef={registerTopicRef}
                 onLessonUpdated={onLessonUpdated}
+                onTopicRenamed={onTopicRenamed}
+                onSnapshotReplaced={onSnapshotReplaced}
               />
             ))}
           </div>
@@ -92,13 +106,19 @@ export default function ReadingView({
 function FeaturedLesson({
   item,
   articleByUrl,
+  topicOptions,
   registerTopicRef,
   onLessonUpdated,
+  onTopicRenamed,
+  onSnapshotReplaced,
 }: {
   item: LessonItem;
   articleByUrl: Map<string, Article>;
+  topicOptions: TopicOption[];
   registerTopicRef: (id: string, el: HTMLElement | null) => void;
   onLessonUpdated: (updated: Lesson) => void;
+  onTopicRenamed: (topicId: string, label: string) => void;
+  onSnapshotReplaced: (snapshot: PipelineResponse) => void;
 }) {
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -117,9 +137,13 @@ function FeaturedLesson({
           <p className="text-[11px] uppercase tracking-wider text-[var(--accent)]">
             Now playing from your stack
           </p>
-          <h1 className="mt-1.5 font-serif text-3xl font-semibold tracking-tight text-[var(--ink)]">
-            {item.title}
-          </h1>
+          <EditableTitle
+            topicId={item.id}
+            label={item.title}
+            onTopicRenamed={onTopicRenamed}
+            className="mt-1.5 font-serif text-3xl font-semibold tracking-tight text-[var(--ink)]"
+            as="h1"
+          />
         </div>
         <VerifiedBadge lesson={item.lesson} />
       </div>
@@ -149,6 +173,9 @@ function FeaturedLesson({
           articleByUrl={articleByUrl}
           open={sourcesOpen}
           onToggle={() => setSourcesOpen((v) => !v)}
+          currentTopicId={item.id}
+          topicOptions={topicOptions}
+          onSnapshotReplaced={onSnapshotReplaced}
         />
         <div className="ml-auto flex items-center gap-2">
           <span className="text-[11px] uppercase tracking-wider text-[var(--muted)]">
@@ -166,13 +193,19 @@ function FeaturedLesson({
 function LessonListCard({
   item,
   articleByUrl,
+  topicOptions,
   registerTopicRef,
   onLessonUpdated,
+  onTopicRenamed,
+  onSnapshotReplaced,
 }: {
   item: LessonItem;
   articleByUrl: Map<string, Article>;
+  topicOptions: TopicOption[];
   registerTopicRef: (id: string, el: HTMLElement | null) => void;
   onLessonUpdated: (updated: Lesson) => void;
+  onTopicRenamed: (topicId: string, label: string) => void;
+  onSnapshotReplaced: (snapshot: PipelineResponse) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
@@ -187,16 +220,15 @@ function LessonListCard({
       }}
       className="scroll-mt-20 flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 transition-colors hover:border-[color-mix(in_oklab,var(--accent)_40%,var(--border))]"
     >
-      <button
-        type="button"
-        onClick={() => setExpanded((v) => !v)}
-        aria-expanded={expanded}
-        className="flex flex-col items-start gap-2 text-left"
-      >
+      <div className="flex flex-col items-start gap-2">
         <div className="flex w-full items-start justify-between gap-3">
-          <h2 className="font-serif text-xl font-semibold text-[var(--ink)]">
-            {item.title}
-          </h2>
+          <EditableTitle
+            topicId={item.id}
+            label={item.title}
+            onTopicRenamed={onTopicRenamed}
+            className="font-serif text-xl font-semibold text-[var(--ink)]"
+            as="h2"
+          />
           {hasAudio ? (
             <span className="shrink-0 rounded-full bg-[color-mix(in_oklab,var(--accent)_12%,transparent)] px-2.5 py-1 text-xs font-medium text-[var(--accent)]">
               ▶ Play
@@ -207,10 +239,15 @@ function LessonListCard({
             </span>
           )}
         </div>
-        <p className="text-sm leading-relaxed text-[var(--muted)]">
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+          className="text-left text-sm leading-relaxed text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
+        >
           {synthesis}
-        </p>
-      </button>
+        </button>
+      </div>
 
       <div className="mt-3">
         <VerifiedBadge lesson={item.lesson} />
@@ -235,8 +272,120 @@ function LessonListCard({
           articleByUrl={articleByUrl}
           open={sourcesOpen}
           onToggle={() => setSourcesOpen((v) => !v)}
+          currentTopicId={item.id}
+          topicOptions={topicOptions}
+          onSnapshotReplaced={onSnapshotReplaced}
         />
       </div>
     </section>
+  );
+}
+
+// Inline-edit a topic label, rendered as the lesson card heading. Idle: the
+// title with a muted pencil that fades in on hover. Editing: a text input
+// pre-filled with the current label — Enter or blur commits via renameTopic,
+// Escape cancels. On success the new label is lifted to page state via
+// onTopicRenamed so the card, the home list, and the topic graph all update.
+function EditableTitle({
+  topicId,
+  label,
+  onTopicRenamed,
+  className,
+  as,
+}: {
+  topicId: string;
+  label: string;
+  onTopicRenamed: (topicId: string, label: string) => void;
+  className: string;
+  as: "h1" | "h2";
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(label);
+  const [busy, setBusy] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  // Guard against blur firing after Escape/Enter has already resolved.
+  const committedRef = useRef(false);
+
+  useEffect(() => {
+    if (editing) {
+      committedRef.current = false;
+      setDraft(label);
+      requestAnimationFrame(() => inputRef.current?.select());
+    }
+  }, [editing, label]);
+
+  async function commit() {
+    if (committedRef.current) return;
+    committedRef.current = true;
+    const next = draft.trim();
+    if (!next || next === label) {
+      setEditing(false);
+      return;
+    }
+    setBusy(true);
+    const res = await renameTopic(topicId, next);
+    setBusy(false);
+    if (res.ok) onTopicRenamed(topicId, res.label);
+    setEditing(false);
+  }
+
+  function cancel() {
+    committedRef.current = true;
+    setEditing(false);
+  }
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        value={draft}
+        autoFocus
+        disabled={busy}
+        spellCheck={false}
+        onClick={(e) => e.stopPropagation()}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          e.stopPropagation();
+          if (e.key === "Enter") commit();
+          else if (e.key === "Escape") cancel();
+        }}
+        className={[
+          className,
+          "w-full min-w-0 rounded-md border border-[var(--accent)] bg-[var(--paper)] px-2 py-0.5 outline-none disabled:opacity-60",
+        ].join(" ")}
+      />
+    );
+  }
+
+  const Tag = as;
+  return (
+    <span className="group/title inline-flex items-center gap-1.5">
+      <Tag className={className}>{label}</Tag>
+      <button
+        type="button"
+        aria-label="Rename topic"
+        onClick={(e) => {
+          e.stopPropagation();
+          setEditing(true);
+        }}
+        className="shrink-0 rounded p-1 text-[var(--muted)] opacity-0 transition-opacity hover:text-[var(--accent)] focus-visible:opacity-100 group-hover/title:opacity-100"
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+        </svg>
+      </button>
+    </span>
   );
 }

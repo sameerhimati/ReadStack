@@ -57,14 +57,72 @@ export type AddResponse = {
   article?: { url: string; title?: string };
 };
 
-export async function addUrl(url: string): Promise<AddResponse> {
+export async function addUrl(
+  url: string,
+  topicId?: string
+): Promise<AddResponse> {
   const res = await fetch(`${API_URL}/add`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url }),
+    body: JSON.stringify(topicId ? { url, topic_id: topicId } : { url }),
   });
   if (!res.ok) throw new Error(`add returned ${res.status}`);
   return (await res.json()) as AddResponse;
+}
+
+// PATCH a topic's label. Pure metadata edit (no inference), so it's cheap and
+// optimistic at the call site. Parses defensively; on ANY failure returns
+// { ok: false } so the UI can revert the inline edit instead of crashing.
+export type RenameResponse =
+  | { ok: true; topic_id: string; label: string }
+  | { ok: false; error?: string };
+
+export async function renameTopic(
+  topicId: string,
+  label: string
+): Promise<RenameResponse> {
+  try {
+    const res = await fetch(`${API_URL}/topic/${topicId}/label`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ label }),
+    });
+    if (!res.ok) throw new Error(`rename returned ${res.status}`);
+    const data = (await res.json()) as RenameResponse;
+    if (!data || !data.ok) throw new Error("rename returned an unsuccessful body");
+    return data;
+  } catch {
+    return { ok: false };
+  }
+}
+
+// POST an article move to a new topic. The backend re-derives affected topics
+// and returns the full updated snapshot, so the caller swaps `data` wholesale.
+// Parses defensively; on ANY failure returns { ok: false } so the UI keeps the
+// current placement instead of crashing.
+export type MoveResponse =
+  | { ok: true; url: string; topic_id: string; snapshot: PipelineResponse }
+  | { ok: false; error?: string };
+
+export async function moveArticle(
+  url: string,
+  topicId: string
+): Promise<MoveResponse> {
+  try {
+    const res = await fetch(`${API_URL}/article/move`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, topic_id: topicId }),
+    });
+    if (!res.ok) throw new Error(`move returned ${res.status}`);
+    const data = (await res.json()) as MoveResponse;
+    if (!data || !data.ok || !data.snapshot) {
+      throw new Error("move returned an unsuccessful/invalid body");
+    }
+    return data;
+  } catch {
+    return { ok: false };
+  }
 }
 
 // POST a topic + desired length to /lesson/regenerate. Costs one inference call
