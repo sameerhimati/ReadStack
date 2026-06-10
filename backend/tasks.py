@@ -54,8 +54,12 @@ async def embed(articles: list[Article]) -> list[Article]:
     return articles
 
 
-async def cluster_name(articles: list[Article]) -> str:
-    """Name a cluster from its articles (structural, weak tier)."""
+async def cluster_name(articles: list[Article], *, avoid: list[str] | None = None) -> str:
+    """Name a cluster from its articles (structural, weak tier).
+
+    `avoid` carries the parent/sibling labels already chosen so a child never
+    repeats its parent ("Reinforcement -> Reinforcement") — it must be a more
+    specific, distinct facet."""
     tier = route(Task.CLUSTER).tier
     metrics.RUN.record(Task.CLUSTER, tier)
 
@@ -66,14 +70,24 @@ async def cluster_name(articles: list[Article]) -> str:
         return _keywords(" ".join(a.title for a in articles), k=2) and \
             " / ".join(_keywords(" ".join(a.title for a in articles), k=2)).title() or "Misc"
 
-    # REAL: ask the weak model for a 2-4 word label given the article titles.
+    # REAL: ask the weak model for a specific 2-4 word label given the titles.
     titles = "\n".join(f"- {a.title}" for a in articles[:12])
+    avoid = [a for a in (avoid or []) if a]
+    avoid_line = (
+        f"\nDo NOT reuse these broader labels — choose a more specific, distinct "
+        f"facet: {', '.join(avoid)}." if avoid else ""
+    )
     out = await akamai.chat(
         tier.value,
-        f"Give a 2-4 word topic label for this group of articles:\n{titles}",
-        system="You name topic clusters concisely.",
+        f"Give a specific 2-4 word topic label for this group of articles. "
+        f"Reply with ONLY the label, no quotes.\n{titles}{avoid_line}",
+        system="You name topic clusters concisely and distinctly.",
+        max_tokens=16,
+        temperature=0.2,
     )
-    return out.strip().strip('"')[:48] or "Misc"
+    label = out.strip().strip('"')
+    label = label.splitlines()[0][:48] if label else ""
+    return label or "Misc"
 
 
 async def lesson(topic: TopicNode, articles: list[Article]) -> Lesson:
@@ -91,9 +105,12 @@ async def lesson(topic: TopicNode, articles: list[Article]) -> Lesson:
         src = "\n\n".join(f"[{a.title}] {a.text[:1500]}" for a in articles[:6])
         script = await akamai.chat(
             tier.value,
-            f"Write a tight ~150-word lesson on '{topic.label}', grounded only in "
-            f"these sources. Do not invent facts.\n\n{src}",
-            system="You write grounded, bite-size lessons from source material.",
+            f"Write a tight ~150-word lesson on '{topic.label}', grounded ONLY in "
+            f"the sources below. No preamble, no headings — plain prose. Do not "
+            f"invent facts.\n\n{src}",
+            system="You write grounded, bite-size lessons strictly from the given sources.",
+            max_tokens=320,
+            temperature=0.4,
         )
 
     return Lesson(topic_id=topic.id, script=script, grounded=False, grounding_score=0.0)
@@ -157,7 +174,9 @@ async def _real_grounding_pass(tier: str, lesson_obj: Lesson, articles: list[Art
         tier,
         f"Score 0-1 how fully the SOURCES support every claim in the LESSON. "
         f"Reply with only the number.\nLESSON:\n{lesson_obj.script}\n\nSOURCES:\n{src}",
-        system="You are a strict grounding verifier.",
+        system="You are a strict grounding verifier. Reply with only a number 0-1.",
+        max_tokens=8,
+        temperature=0.0,
     )
     m = re.search(r"[01](?:\.\d+)?", out)
     return float(m.group()) if m else 0.5

@@ -4,6 +4,26 @@ import { MOCK } from "./mock";
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
+// GET the cached pipeline snapshot — ZERO backend inference. This is the default
+// load (what judges hit on every view); rebuilding is the explicit buildStack call.
+// Falls back to MOCK so the demo always renders.
+export async function fetchSnapshot(): Promise<{
+  data: PipelineResponse;
+  usedMock: boolean;
+}> {
+  try {
+    const res = await fetch(`${API_URL}/snapshot`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`snapshot returned ${res.status}`);
+    const data = (await res.json()) as PipelineResponse;
+    if (!data || !data.topics || !data.lessons) {
+      throw new Error("snapshot empty/invalid");
+    }
+    return { data, usedMock: false };
+  } catch {
+    return { data: MOCK, usedMock: true };
+  }
+}
+
 // POST the urls to the pipeline (empty array => backend's curated corpus).
 // On ANY failure (network, non-200, empty body) fall back to the mock so the
 // demo always renders. Returns a flag so the UI can surface sample-data state.

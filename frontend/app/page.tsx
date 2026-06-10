@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Article, Lesson, PipelineResponse } from "@/lib/types";
-import { buildStack } from "@/lib/api";
+import { buildStack, fetchSnapshot } from "@/lib/api";
 import { MOCK } from "@/lib/mock";
 import Nav, { type Tab } from "@/components/Nav";
 import ReadingView from "@/components/ReadingView";
@@ -29,6 +29,22 @@ export default function Home() {
   // Sync the theme toggle with the class the no-FOUC script already set.
   useEffect(() => {
     setIsDark(document.documentElement.classList.contains("dark"));
+  }, []);
+
+  // On load, pull the cached snapshot (no backend inference). MOCK stays as the
+  // first paint and the fallback if the backend isn't reachable.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const { data: snap, usedMock: mock } = await fetchSnapshot();
+      if (alive && !mock) {
+        setData(snap);
+        setUsedMock(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
   }, []);
 
   const toggleTheme = () => {

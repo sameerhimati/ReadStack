@@ -86,14 +86,25 @@ async def _rebuild_from_store() -> dict:
     tree = cluster.build(articles)
     by_url = {a.url: a for a in articles}
 
-    lessons, leaves = [], []
-    for node in cluster.iter_nodes(tree):
+    # Relabel parent-before-child so each child can avoid repeating its parent's
+    # label (no more "Reinforcement -> Reinforcement"); children must be facets.
+    async def _relabel(node, parent_label):
         node_articles = [by_url[u] for u in node.article_urls if u in by_url]
         if node_articles:
-            node.label = await tasks.cluster_name(node_articles)
-        if not node.children and node_articles:
-            leaves.append((node, node_articles))
+            node.label = await tasks.cluster_name(
+                node_articles, avoid=[parent_label] if parent_label else None
+            )
+        for child in node.children:
+            await _relabel(child, node.label)
 
+    await _relabel(tree, None)
+
+    lessons = []
+    leaves = [
+        (node, [by_url[u] for u in node.article_urls if u in by_url])
+        for node in cluster.iter_nodes(tree)
+        if not node.children and node.article_urls
+    ]
     for node, node_articles in leaves:
         lesson = await tasks.lesson(node, node_articles)
         lesson = await tasks.verify(lesson, node_articles)
@@ -217,6 +228,21 @@ def _load_corpus() -> list[str]:
     if not _CORPUS.exists():
         return []
     return [ln.strip() for ln in _CORPUS.read_text().splitlines() if ln.strip()]
+
+
+@app.get("/snapshot")
+def snapshot():
+    """Read-only cached pipeline output — ZERO inference.
+
+    This is what the frontend loads and what judges hit: page views never re-run
+    the models (so the GPU isn't hammered and views cost nothing). Rebuilding the
+    stack is the explicit POST /pipeline.
+    """
+    snap = store.load_snapshot()
+    if snap is None:
+        return {"articles": [], "topics": None, "lessons": [],
+                "metrics": metrics.RUN.summary()}
+    return snap
 
 
 @app.get("/health")
