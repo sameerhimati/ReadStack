@@ -64,11 +64,7 @@ async def cluster_name(articles: list[Article], *, avoid: list[str] | None = Non
     metrics.RUN.record(Task.CLUSTER, tier)
 
     if akamai.MOCK:
-        tags = [t for a in articles for t in a.tags]
-        if tags:
-            return Counter(tags).most_common(1)[0][0].title()
-        return _keywords(" ".join(a.title for a in articles), k=2) and \
-            " / ".join(_keywords(" ".join(a.title for a in articles), k=2)).title() or "Misc"
+        return _mock_label(articles)
 
     # REAL: ask the weak model for a specific 2-4 word label given the titles.
     titles = "\n".join(f"- {a.title}" for a in articles[:12])
@@ -90,26 +86,31 @@ async def cluster_name(articles: list[Article], *, avoid: list[str] | None = Non
     return label or "Misc"
 
 
-async def lesson(topic: TopicNode, articles: list[Article]) -> Lesson:
-    """Write the bite-size lesson — what a human actually consumes.
+# length picker -> (target words, max_tokens budget for the model)
+_LESSON_LEN = {"short": (70, 160), "medium": (160, 340), "long": (340, 700)}
+
+
+async def lesson(topic: TopicNode, articles: list[Article], length: str = "medium") -> Lesson:
+    """Write the lesson a human consumes, at the chosen length (short/medium/long).
 
     Hero topics (big clusters) escalate to the strong tier via route()."""
     tier = route(Task.LESSON, topic_size=len(articles)).tier
     metrics.RUN.record(Task.LESSON, tier)
+    target_words, max_tok = _LESSON_LEN.get(length, _LESSON_LEN["medium"])
 
     if akamai.MOCK:
-        script = _mock_lesson(topic, articles)
+        script = _mock_lesson(topic, articles, target_words)
     else:
-        # REAL: prompt the chosen tier to write a grounded ~150-word micro-lesson
-        # using ONLY the supplied article text. Keep sources in context for verify.
+        # REAL: grounded micro-lesson in light Markdown, ONLY from the sources.
         src = "\n\n".join(f"[{a.title}] {a.text[:1500]}" for a in articles[:6])
         script = await akamai.chat(
             tier.value,
-            f"Write a tight ~150-word lesson on '{topic.label}', grounded ONLY in "
-            f"the sources below. No preamble, no headings — plain prose. Do not "
-            f"invent facts.\n\n{src}",
+            f"Write a ~{target_words}-word lesson on '{topic.label}', grounded ONLY in "
+            f"the sources below. Use light Markdown: a short **bold title**, then prose, "
+            f"with a few '- ' bullets only if they help. No preamble. Do not invent facts."
+            f"\n\n{src}",
             system="You write grounded, bite-size lessons strictly from the given sources.",
-            max_tokens=320,
+            max_tokens=max_tok,
             temperature=0.4,
         )
 
@@ -139,7 +140,10 @@ async def verify(lesson_obj: Lesson, articles: list[Article]) -> Lesson:
 # --- helpers -----------------------------------------------------------------
 
 _STOP = {"about", "their", "there", "these", "those", "which", "while", "where",
-         "would", "could", "should", "after", "before", "other", "https", "http"}
+         "would", "could", "should", "after", "before", "other", "https", "http",
+         "with", "your", "this", "from", "what", "when", "into", "more", "than",
+         "that", "they", "them", "will", "have", "also", "just", "like", "make",
+         "over", "such", "were", "been", "using", "based", "guide", "intro"}
 
 
 def _keywords(text: str, k: int) -> list[str]:
@@ -148,18 +152,32 @@ def _keywords(text: str, k: int) -> list[str]:
     return [w for w, _ in counts.most_common(k)]
 
 
-def _mock_lesson(topic: TopicNode, articles: list[Article]) -> str:
-    titles = [a.title for a in articles[:3] if a.title]
+def _mock_label(articles: list[Article]) -> str:
+    """Provisional label from words shared ACROSS titles (document frequency), so one
+    quirky title ("while my_mcmc: gently(samples)") can't name the whole topic. Still a
+    stopgap — sensible labels need the real model (cluster_name on Akamai/Ollama)."""
+    df: Counter = Counter()
+    for a in articles:
+        words = {w for w in re.findall(r"[a-z]{4,}", (a.title or "").lower()) if w not in _STOP}
+        df.update(words)
+    if not df:
+        return "Misc"
+    return " ".join(w.title() for w, _ in df.most_common(2))
+
+
+def _mock_lesson(topic: TopicNode, articles: list[Article], target_words: int = 160) -> str:
     lead = topic.label or "this topic"
-    body = " ".join(
-        f"{t} adds another angle." for t in titles
-    ) or "These readings converge on a shared theme."
-    return (
-        f"**{lead}** — a quick synthesis of {len(articles)} saved reads. {body} "
-        f"The throughline: ideas here reinforce each other, so reading them "
-        f"together compounds faster than one at a time. (Mock lesson — swap for "
-        f"the grounded model output.)"
+    bullets = "\n".join(f"- {a.title}" for a in articles[:4] if a.title) \
+        or "- These readings converge on a shared theme."
+    md = (
+        f"**{lead}** — a synthesis of {len(articles)} saved reads.\n\n"
+        f"The throughline: these ideas reinforce each other, so reading them together "
+        f"compounds faster than one at a time. The key sources:\n\n{bullets}\n\n"
     )
+    filler = "Each source adds a distinct angle the others build on, and read together they cohere. "
+    while len(md.split()) < target_words:
+        md += filler
+    return md + "\n\n_Mock lesson — real grounded text lands when the model is wired._"
 
 
 def _mock_grounding_score(lesson_obj: Lesson) -> float:
