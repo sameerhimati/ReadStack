@@ -1,12 +1,31 @@
 # Session Handoff
 > Last updated: 2026-06-10 (evening) — big feature session, demo recording next
 
-## ⏭️ NEXT SESSION
-1. **Record the demo** (servers are running locally right now — see "Demo state").
-2. **Run `/ux-audit` in a loop** against live localhost and fix every issue via
-   subagents, each fix committed + re-verified. **This was deferred to record the
-   video first.** See "UX-audit plan" below.
-3. Merge `fix/flatten-clustering` → `main` once the demo is in the can.
+## ⏭️ NEXT SESSION — "fix a lot of the features" + polish (demo IS RECORDED)
+The vertical slice ships; next session is quality. Backlog from Sameer post-record:
+
+1. **`/ux-audit` loop** — walk live localhost as a persona, fix every rough edge via
+   subagents, commit atomically, re-verify with screenshots. See "UX-audit plan".
+2. **Media is half-built — make it real:**
+   - **No generate button exists.** Today media is PRE-BAKED only (Magnific MCP at
+     build time); the UI just plays what's on disk. Add an actual **Generate audio /
+     Generate video** button. Blocker: runtime gen from the deployed box needs the
+     **Magnific REST key** (the box has no MCP) — either get the key, or build a
+     "queue a build-time gen" flow. Decide the path first.
+   - **Audio gen** — per-article/per-topic, with the spinner-while-generating moment.
+   - **Video gen (J)** — never pre-baked; wire `video_generate` + the card slot.
+   - **Audio length control** — let the user pick narration length (short summary vs
+     full), parallel to the lesson Length picker. (`tasks.lesson` length ≠ audio length.)
+3. **Tagging quality** — does `tasks.tag` produce sensible tags? Review the prompt +
+   output; tags feed provisional cluster labels, so junk tags = junk labels under mock.
+   Tighten the prompt / dedupe / cap count. Check against real Claude output too.
+4. **Diversify the corpus** — current 67 URLs are ~all agent/ML (genuinely homogeneous,
+   which is why the tree is one deep family). Add **recipes, physics, and other
+   unrelated domains** to `backend/data/urls.txt` so the top level fans into clearly
+   distinct themes — this also *shows off adaptive clustering* (broad themes, each
+   subdivided by its own structure) far better than the mono-topic corpus does.
+   After adding, re-bake (`POST /pipeline`) and eyeball the tree depth/breadth.
+5. Merge `fix/flatten-clustering` → `main` once it's polished.
 
 ## Completed THIS session (all on `fix/flatten-clustering`, pushed)
 Nine commits, `9d787a8..a6fb17b`:
