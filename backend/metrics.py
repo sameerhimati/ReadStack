@@ -10,13 +10,22 @@ from __future__ import annotations
 
 from contracts import Task, Tier
 
-# Illustrative $/call per tier. Absolute values don't matter for the demo — the
-# RATIO between tiers is the story (a 405B call dwarfs an 8B call).
+# Real $/call per tier, derived from the actual Claude prices we run on (Anthropic,
+# 2026-06): Haiku 4.5 = $1/$5 per 1M in/out tokens, Sonnet 4.6 = $3/$15. The router
+# sends the volume tiers (TAG/CLUSTER/VERIFY) to Haiku and the consumable tiers
+# (LESSON, escalations) to Sonnet; embeddings run locally on the CPU box, so their
+# marginal cost is ~$0. Each per-call figure = representative in/out tokens for that
+# tier's typical task at those rates (kept as flat per-call so the metric stays
+# simple — the honest story is the cross-tier ratio, now grounded in real prices):
+#   WEAK   Haiku  ~1.5k in + ~50 out  -> 1500*$1/1e6 + 50*$5/1e6   ≈ $0.00175
+#   MID    Sonnet ~3k in + ~350 out   -> 3000*$3/1e6 + 350*$15/1e6 ≈ $0.0143
+#   STRONG Sonnet ~4k in + ~600 out   -> 4000*$3/1e6 + 600*$15/1e6 ≈ $0.021
+#   EMBED  local nomic on CPU         -> ~$0 marginal
 COST_PER_CALL = {
-    Tier.EMBED: 0.00002,
-    Tier.WEAK: 0.0001,
-    Tier.MID: 0.0020,
-    Tier.STRONG: 0.0200,
+    Tier.EMBED: 0.0,
+    Tier.WEAK: 0.00175,
+    Tier.MID: 0.0143,
+    Tier.STRONG: 0.021,
 }
 
 
