@@ -6,6 +6,14 @@ the GPU in later with 3 env vars. Put **every box in the SAME region**.
 
 Repo: `git@github.com:sameerhimati/ReadStack.git`
 
+> **Automated path (no GPU):** `deploy.sh` does Parts 1–2 for you on the CPU app box.
+> Make a pgvector box + an A record first (Part 1), then on the app box set
+> `DOMAIN`, `DATABASE_URL`, `ANTHROPIC_API_KEY` in `/opt/readstack-deploy.env` and run
+> `sudo bash deploy.sh`. It installs deps, builds both apps, writes systemd units +
+> the Caddyfile, and bakes the snapshot. The GPU/Ollama path (Part 3) is **dropped** —
+> generation runs on Anthropic; embeddings run locally on this CPU box. The manual
+> steps below remain accurate if you'd rather do it by hand.
+
 ---
 
 ## Part 1 — pgvector (the database) — Marketplace one-click
