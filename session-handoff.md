@@ -31,6 +31,16 @@ The vertical slice ships; next session is quality. Backlog from Sameer post-reco
    distinct themes — this also *shows off adaptive clustering* (broad themes, each
    subdivided by its own structure) far better than the mono-topic corpus does.
    After adding, re-bake (`POST /pipeline`) and eyeball the tree depth/breadth.
+   (Started this session — see "Completed since record".)
+5. **Better grouping / hierarchy** — Sameer wants the topic hierarchy to *group sources
+   more intuitively*. Beyond diversifying (item 4): are the top cuts the right ones?
+   balance depth, lean on real `cluster_name` labels (not provisional tags), maybe
+   reorder facets by semantic distance so siblings read as a coherent family. The
+   grouping should look "obviously right" to a human skimming the map.
+6. **Move parts of the graph** — let the user drag/reposition nodes on the force map
+   (currently `enableNodeDrag={false}` in `TopicGraphCanvas.tsx`). Enable drag + PIN
+   dragged nodes (set `fx`/`fy` on dragend so they stay put), and revisit the initial
+   layout so it's tidier before it settles. Pairs with the ux-audit graph polish.
 
 **DONE since record:** `fix/flatten-clustering` is **merged to `main`** (`main` @ `c31d4c5`)
 and `deploy.sh` ships. Magnific REST = "contact support" (no key available yet).
