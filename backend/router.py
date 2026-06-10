@@ -25,7 +25,8 @@ _DEFAULT_TIER = {
 HERO_TOPIC_MIN_ARTICLES = 8      # a topic this big earns a stronger lesson model
 GROUNDING_ESCALATE_BELOW = 0.6   # weak verifier unsure -> escalate the check
 SPLIT_MIN_ARTICLES = 6           # clusters bigger than this may split...
-SPLIT_MAX_COHERENCE = 0.55       # ...only if they're also incoherent
+SPLIT_MAX_COHERENCE = 0.72       # ...only if they're also incoherent (calibrated to
+                                 # nomic-embed, whose cosines run ~0.4 higher than MiniLM)
 STOP_MAX_ARTICLES = 5            # small enough -> leaf node
 STOP_MAX_DEPTH = 4
 

@@ -20,7 +20,8 @@ import metrics
 from contracts import Article, Lesson, Task, TopicNode
 from router import route
 
-_TEXT_CAP = 6000  # chars of article text fed to a model; keeps volume calls cheap
+_TEXT_CAP = 6000  # chars of article text fed to a chat model; keeps volume calls cheap
+_EMBED_TEXT_CAP = 8000  # nomic reads 8192 tokens — feed more of each article than chat does
 
 
 async def tag(article: Article) -> list[str]:
@@ -48,7 +49,7 @@ async def embed(articles: list[Article]) -> list[Article]:
     """Embed every article (highest volume task -> the embed tier)."""
     for _ in articles:
         metrics.RUN.record(Task.EMBED, route(Task.EMBED).tier)
-    vectors = await akamai.embed([a.text[:_TEXT_CAP] or a.title for a in articles])
+    vectors = await akamai.embed([a.text[:_EMBED_TEXT_CAP] or a.title for a in articles])
     for a, v in zip(articles, vectors):
         a.embedding = v
     return articles

@@ -63,9 +63,13 @@ ANTHROPIC_MODEL = {
 _TIMEOUT = float(os.getenv("AKAMAI_TIMEOUT", "45"))
 _RETRIES = int(os.getenv("AKAMAI_RETRIES", "1"))
 
-# Local fallback embedder (384-dim, fast). Lazily loaded so importing this
-# module stays cheap and we never pull torch unless embeddings are needed.
-_LOCAL_EMBED_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+# Local embedder. nomic-embed-text-v1.5: 768-dim, 8192-token context (reads the
+# whole article, not just the first paragraph like MiniLM's 256-token cap),
+# Apache-2.0. Also runnable on Ollama (the Akamai GPU box) under the same name.
+# v1.5 REQUIRES task prefixes — "search_document: " for stored docs, "search_query: "
+# for queries. Lazily loaded so importing this module stays cheap.
+_LOCAL_EMBED_MODEL = "nomic-ai/nomic-embed-text-v1.5"
+_EMBED_DOC_PREFIX = "search_document: "
 _local_embedder = None
 
 
@@ -171,8 +175,15 @@ def _local_embed(texts: list[str]) -> list[list[float]]:
     if _local_embedder is None:
         from sentence_transformers import SentenceTransformer
 
-        _local_embedder = SentenceTransformer(_LOCAL_EMBED_MODEL)
-    vecs = _local_embedder.encode(texts, normalize_embeddings=True)
+        # Pin to CPU: nomic at full 8192 context OOMs Apple's MPS on a batch of
+        # long docs, and the deploy target (Akamai CPU box) has no GPU anyway.
+        # 2048 tokens still reads ~8x more of each article than MiniLM's 256.
+        _local_embedder = SentenceTransformer(
+            _LOCAL_EMBED_MODEL, trust_remote_code=True, device="cpu"
+        )
+        _local_embedder.max_seq_length = 2048
+    prefixed = [_EMBED_DOC_PREFIX + t for t in texts]
+    vecs = _local_embedder.encode(prefixed, normalize_embeddings=True, batch_size=8)
     return [v.tolist() for v in vecs]
 
 
