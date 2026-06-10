@@ -1,45 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import type { Lesson, TopicNode } from "@/lib/types";
+import type { Article, Lesson } from "@/lib/types";
 import { mediaUrl } from "@/lib/api";
-
-// The per-topic lesson: serif prose, a plain-language Verified badge, and an
-// audio player. Open by default for its topic.
-export default function LessonCard({
-  lesson,
-  topic,
-}: {
-  lesson: Lesson | null;
-  topic: TopicNode | null;
-}) {
-  if (!lesson || !topic) return null;
-
-  return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <p className="text-[11px] uppercase tracking-wider text-[var(--muted)]">
-          Lesson
-        </p>
-        <VerifiedBadge lesson={lesson} />
-      </div>
-
-      <p className="max-w-[68ch] whitespace-pre-line font-serif text-[17px] leading-relaxed text-[var(--ink)]">
-        {lesson.script}
-      </p>
-
-      <div className="mt-5 border-t border-[var(--border)] pt-4">
-        <AudioPlayer lesson={lesson} />
-      </div>
-    </div>
-  );
-}
+import { hostOf } from "@/lib/lessons";
 
 // Plain-language trust signal — replaces the word "grounded" everywhere.
 // Verified => green. Otherwise amber, and clicking it reveals a short note
 // pointing at the unsupported sentence (degrades gracefully: the real
 // flagged-sentence data isn't wired yet, so we surface the last sentence).
-function VerifiedBadge({ lesson }: { lesson: Lesson }) {
+export function VerifiedBadge({ lesson }: { lesson: Lesson }) {
   const [open, setOpen] = useState(false);
 
   if (lesson.grounded) {
@@ -56,7 +26,10 @@ function VerifiedBadge({ lesson }: { lesson: Lesson }) {
     <div className="relative">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
         aria-expanded={open}
         className="inline-flex items-center gap-1.5 rounded-full bg-[color-mix(in_oklab,var(--unverified)_12%,transparent)] px-2.5 py-1 text-xs font-medium text-[var(--unverified)] transition-colors hover:bg-[color-mix(in_oklab,var(--unverified)_20%,transparent)]"
       >
@@ -81,15 +54,23 @@ function VerifiedBadge({ lesson }: { lesson: Lesson }) {
   );
 }
 
-function AudioPlayer({ lesson }: { lesson: Lesson }) {
+// The audio affordance — the gravitational center. When audio is ready, the
+// native player; otherwise a tasteful, honest "coming soon" pill.
+export function AudioPlayer({
+  lesson,
+  prominent = false,
+}: {
+  lesson: Lesson;
+  prominent?: boolean;
+}) {
   if (lesson.audio_path) {
     return (
-      <div className="space-y-2">
-        <p className="text-[11px] uppercase tracking-wider text-[var(--muted)]">
-          🎧 Narration
-        </p>
-        <audio controls preload="none" src={mediaUrl(lesson.audio_path)} />
-      </div>
+      <audio
+        controls
+        preload="none"
+        src={mediaUrl(lesson.audio_path)}
+        className={prominent ? "w-full" : ""}
+      />
     );
   }
   return (
@@ -98,8 +79,83 @@ function AudioPlayer({ lesson }: { lesson: Lesson }) {
       disabled
       className="inline-flex cursor-not-allowed items-center gap-2 rounded-full border border-[var(--border)] px-4 py-1.5 text-xs font-medium text-[var(--muted)]"
     >
-      ▶ Audio (coming soon)
+      ▶ Listen — audio coming soon
     </button>
+  );
+}
+
+// Collapsible list of the articles that ground a lesson. Demoted from the home
+// hierarchy: sources live behind this toggle, collapsed by default.
+export function SourceList({
+  urls,
+  articleByUrl,
+  open,
+  onToggle,
+}: {
+  urls: string[];
+  articleByUrl: Map<string, Article>;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const count = urls.length;
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
+        aria-expanded={open}
+        className="inline-flex items-center gap-1.5 text-xs text-[var(--muted)] transition-colors hover:text-[var(--accent)]"
+      >
+        <span
+          className={[
+            "inline-block transition-transform",
+            open ? "rotate-90" : "",
+          ].join(" ")}
+          aria-hidden
+        >
+          ▸
+        </span>
+        {count} {count === 1 ? "source" : "sources"}
+      </button>
+
+      {open && count > 0 && (
+        <div className="mt-2 divide-y divide-[var(--border)] border-t border-[var(--border)]">
+          {urls.map((url) => {
+            const article = articleByUrl.get(url);
+            const title = article?.title ?? url;
+            return (
+              <div key={url} className="flex items-baseline gap-3 py-2.5">
+                <span className="font-medium text-[var(--ink)]">{title}</span>
+                <span className="text-xs text-[var(--muted)]">
+                  {hostOf(url)}
+                </span>
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="ml-auto shrink-0 text-xs text-[var(--muted)] transition-colors hover:text-[var(--accent)]"
+                >
+                  Open ↗
+                </a>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Full lesson prose at reading measure.
+export function LessonProse({ script }: { script: string }) {
+  return (
+    <p className="max-w-[68ch] whitespace-pre-line font-serif text-[17px] leading-relaxed text-[var(--ink)]">
+      {script}
+    </p>
   );
 }
 

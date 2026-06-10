@@ -1,16 +1,26 @@
 "use client";
 
-import { useState } from "react";
-import type { Article, Lesson, PipelineResponse, TopicNode } from "@/lib/types";
-import LessonCard from "./LessonCard";
+import { useMemo, useState } from "react";
+import type { Article, Lesson, PipelineResponse } from "@/lib/types";
+import {
+  deriveLessonItems,
+  firstSentences,
+  pickFeatured,
+  type LessonItem,
+} from "@/lib/lessons";
+import {
+  AudioPlayer,
+  LessonProse,
+  SourceList,
+  VerifiedBadge,
+} from "./LessonCard";
 
-// The home tab: topic-grouped article rows + a play-able lesson per topic.
-// Top-level groups = root.children. Sub-topics (depth 2) nest as sub-groups.
+// The home tab, reframed: playable lessons are the hero, articles are demoted
+// to collapsible "sources". Your backlog -> open a lesson -> hit play.
 export default function ReadingView({
   data,
   lessonByTopic,
   articleByUrl,
-  focusTopicId,
   registerTopicRef,
 }: {
   data: PipelineResponse;
@@ -19,12 +29,18 @@ export default function ReadingView({
   focusTopicId: string | null;
   registerTopicRef: (id: string, el: HTMLElement | null) => void;
 }) {
-  const tops = data.topics.children;
+  const items = useMemo(
+    () => deriveLessonItems(data, lessonByTopic),
+    [data, lessonByTopic]
+  );
+  const featured = useMemo(() => pickFeatured(items), [items]);
 
-  if (tops.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-6 py-16 text-center">
-        <p className="font-serif text-xl text-[var(--ink)]">Your stack is empty</p>
+        <p className="font-serif text-xl text-[var(--ink)]">
+          Your stack is empty
+        </p>
         <p className="mt-2 text-sm text-[var(--muted)]">
           Add a link or load the demo corpus to get started.
         </p>
@@ -32,150 +48,174 @@ export default function ReadingView({
     );
   }
 
+  const rest = items.filter((it) => it.id !== featured?.id);
+
   return (
-    <div className="space-y-12">
-      {tops.map((topic) => (
-        <TopicGroup
-          key={topic.id}
-          topic={topic}
-          lessonByTopic={lessonByTopic}
+    <div className="space-y-10">
+      {featured && (
+        <FeaturedLesson
+          item={featured}
           articleByUrl={articleByUrl}
-          focusTopicId={focusTopicId}
           registerTopicRef={registerTopicRef}
         />
-      ))}
+      )}
+
+      {rest.length > 0 && (
+        <section className="space-y-4">
+          <p className="text-[11px] uppercase tracking-wider text-[var(--muted)]">
+            More from your stack
+          </p>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {rest.map((item) => (
+              <LessonListCard
+                key={item.id}
+                item={item}
+                articleByUrl={articleByUrl}
+                registerTopicRef={registerTopicRef}
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
 
-function TopicGroup({
-  topic,
-  lessonByTopic,
+// The immediate wow on load: a large card, the audio player front and center,
+// a serif title, a two-sentence lead, the Verified badge, and sources tucked
+// behind a toggle.
+function FeaturedLesson({
+  item,
   articleByUrl,
-  focusTopicId,
   registerTopicRef,
 }: {
-  topic: TopicNode;
-  lessonByTopic: Map<string, Lesson>;
+  item: LessonItem;
   articleByUrl: Map<string, Article>;
-  focusTopicId: string | null;
   registerTopicRef: (id: string, el: HTMLElement | null) => void;
 }) {
-  // A topic's own lesson (if it's a leaf), plus any sub-topic lessons rendered
-  // under their sub-group headers.
-  const ownLesson = lessonByTopic.get(topic.id) ?? null;
-  const count = totalArticleCount(topic);
-  const focused = focusTopicId === topic.id;
+  const [sourcesOpen, setSourcesOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const lead = firstSentences(item.lesson.script, 2);
 
   return (
     <section
-      ref={(el) => registerTopicRef(topic.id, el)}
-      className={[
-        "scroll-mt-20 space-y-3 rounded-2xl px-1 transition-colors",
-        focused ? "ring-1 ring-[var(--accent)]" : "",
-      ].join(" ")}
+      ref={(el) => {
+        registerTopicRef(item.id, el);
+        if (item.topId !== item.id) registerTopicRef(item.topId, el);
+      }}
+      className="scroll-mt-20 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 md:p-8"
     >
-      <div className="flex items-baseline gap-3">
-        <h2 className="font-serif text-xl font-semibold text-[var(--ink)]">
-          {topic.label}
-        </h2>
-        <span className="text-xs text-[var(--muted)]">
-          {count} {count === 1 ? "article" : "articles"}
-        </span>
-        {ownLesson && (
-          <span className="text-xs text-[var(--accent)]">🎧 ▶ lesson</span>
-        )}
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <div>
+          <p className="text-[11px] uppercase tracking-wider text-[var(--accent)]">
+            Now playing from your stack
+          </p>
+          <h1 className="mt-1.5 font-serif text-3xl font-semibold tracking-tight text-[var(--ink)]">
+            {item.title}
+          </h1>
+        </div>
+        <VerifiedBadge lesson={item.lesson} />
       </div>
 
-      <ArticleRows urls={topic.article_urls} articleByUrl={articleByUrl} />
+      <div className="mb-5">
+        <AudioPlayer lesson={item.lesson} prominent />
+      </div>
 
-      {ownLesson && (
-        <div className="pt-1">
-          <LessonCard lesson={ownLesson} topic={topic} />
-        </div>
+      {expanded ? (
+        <LessonProse script={item.lesson.script} />
+      ) : (
+        <p className="max-w-[68ch] font-serif text-[17px] leading-relaxed text-[var(--ink)]">
+          {lead}
+        </p>
       )}
 
-      {/* Sub-topics nest under their parent as sub-groups. */}
-      {topic.children.map((sub) => {
-        const subLesson = lessonByTopic.get(sub.id) ?? null;
-        return (
-          <div
-            key={sub.id}
-            ref={(el) => registerTopicRef(sub.id, el)}
-            className="scroll-mt-20 space-y-2 border-l border-[var(--border)] pl-4"
-          >
-            <div className="flex items-baseline gap-3">
-              <h3 className="font-serif text-base font-semibold text-[var(--ink)]">
-                {sub.label}
-              </h3>
-              <span className="text-xs text-[var(--muted)]">
-                {sub.article_urls.length}
-              </span>
-              {subLesson && (
-                <span className="text-xs text-[var(--accent)]">🎧 ▶ lesson</span>
-              )}
-            </div>
-            <ArticleRows
-              urls={sub.article_urls}
-              articleByUrl={articleByUrl}
-            />
-            {subLesson && (
-              <div className="pt-1">
-                <LessonCard lesson={subLesson} topic={sub} />
-              </div>
-            )}
-          </div>
-        );
-      })}
+      <div className="mt-5 flex flex-wrap items-center gap-4 border-t border-[var(--border)] pt-4">
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="text-xs font-medium text-[var(--accent)] transition-colors hover:opacity-80"
+        >
+          {expanded ? "Show less" : "Read the lesson"}
+        </button>
+        <SourceList
+          urls={item.articleUrls}
+          articleByUrl={articleByUrl}
+          open={sourcesOpen}
+          onToggle={() => setSourcesOpen((v) => !v)}
+        />
+      </div>
     </section>
   );
 }
 
-function ArticleRows({
-  urls,
+// One playable lesson in the secondary list. Click the card to expand the full
+// prose inline; the ▶ / synthesis / Verified badge / sources read at a glance.
+function LessonListCard({
+  item,
   articleByUrl,
+  registerTopicRef,
 }: {
-  urls: string[];
+  item: LessonItem;
   articleByUrl: Map<string, Article>;
+  registerTopicRef: (id: string, el: HTMLElement | null) => void;
 }) {
-  if (urls.length === 0) return null;
+  const [expanded, setExpanded] = useState(false);
+  const [sourcesOpen, setSourcesOpen] = useState(false);
+  const synthesis = firstSentences(item.lesson.script, 1);
+  const hasAudio = !!item.lesson.audio_path;
+
   return (
-    <div className="divide-y divide-[var(--border)]">
-      {urls.map((url) => {
-        const article = articleByUrl.get(url);
-        const title = article?.title ?? url;
-        return (
-          <div key={url} className="flex items-baseline gap-3 py-3">
-            <span className="font-medium text-[var(--ink)] transition-colors hover:text-[var(--accent)]">
-              {title}
+    <section
+      ref={(el) => {
+        registerTopicRef(item.id, el);
+        if (item.topId !== item.id) registerTopicRef(item.topId, el);
+      }}
+      className="scroll-mt-20 flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 transition-colors hover:border-[color-mix(in_oklab,var(--accent)_40%,var(--border))]"
+    >
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+        className="flex flex-col items-start gap-2 text-left"
+      >
+        <div className="flex w-full items-start justify-between gap-3">
+          <h2 className="font-serif text-xl font-semibold text-[var(--ink)]">
+            {item.title}
+          </h2>
+          {hasAudio ? (
+            <span className="shrink-0 rounded-full bg-[color-mix(in_oklab,var(--accent)_12%,transparent)] px-2.5 py-1 text-xs font-medium text-[var(--accent)]">
+              ▶ Play
             </span>
-            <span className="text-xs text-[var(--muted)]">{hostOf(url)}</span>
-            <a
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="ml-auto shrink-0 text-xs text-[var(--muted)] transition-colors hover:text-[var(--accent)]"
-            >
-              Open ↗
-            </a>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+          ) : (
+            <span className="shrink-0 rounded-full border border-[var(--border)] px-2.5 py-1 text-xs font-medium text-[var(--muted)]">
+              Listen soon
+            </span>
+          )}
+        </div>
+        <p className="text-sm leading-relaxed text-[var(--muted)]">
+          {synthesis}
+        </p>
+      </button>
 
-function totalArticleCount(topic: TopicNode): number {
-  return (
-    topic.article_urls.length +
-    topic.children.reduce((s, c) => s + totalArticleCount(c), 0)
-  );
-}
+      <div className="mt-3">
+        <VerifiedBadge lesson={item.lesson} />
+      </div>
 
-function hostOf(url: string): string {
-  try {
-    return new URL(url).host.replace(/^www\./, "");
-  } catch {
-    return "";
-  }
+      {expanded && (
+        <div className="mt-4 space-y-4 border-t border-[var(--border)] pt-4">
+          <AudioPlayer lesson={item.lesson} prominent />
+          <LessonProse script={item.lesson.script} />
+        </div>
+      )}
+
+      <div className="mt-4 border-t border-[var(--border)] pt-3">
+        <SourceList
+          urls={item.articleUrls}
+          articleByUrl={articleByUrl}
+          open={sourcesOpen}
+          onToggle={() => setSourcesOpen((v) => !v)}
+        />
+      </div>
+    </section>
+  );
 }
