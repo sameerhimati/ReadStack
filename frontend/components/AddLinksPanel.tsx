@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { DEMO_CORPUS } from "@/lib/api";
 
 export default function AddLinksPanel({
   onBuild,
@@ -25,8 +24,9 @@ export default function AddLinksPanel({
   };
 
   const loadDemo = () => {
-    setText(DEMO_CORPUS.join("\n"));
-    onBuild(DEMO_CORPUS);
+    // Empty list -> the backend builds from its own curated data/urls.txt, so the
+    // demo always reflects the validated corpus (single source of truth).
+    onBuild([]);
   };
 
   return (
