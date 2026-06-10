@@ -6,16 +6,22 @@ The vertical slice ships; next session is quality. Backlog from Sameer post-reco
 
 1. **`/ux-audit` loop** — walk live localhost as a persona, fix every rough edge via
    subagents, commit atomically, re-verify with screenshots. See "UX-audit plan".
-2. **Media is half-built — make it real:**
-   - **No generate button exists.** Today media is PRE-BAKED only (Magnific MCP at
-     build time); the UI just plays what's on disk. Add an actual **Generate audio /
-     Generate video** button. Blocker: runtime gen from the deployed box needs the
-     **Magnific REST key** (the box has no MCP) — either get the key, or build a
-     "queue a build-time gen" flow. Decide the path first.
-   - **Audio gen** — per-article/per-topic, with the spinner-while-generating moment.
-   - **Video gen (J)** — never pre-baked; wire `video_generate` + the card slot.
-   - **Audio length control** — let the user pick narration length (short summary vs
-     full), parallel to the lesson Length picker. (`tasks.lesson` length ≠ audio length.)
+2. **Media — finish runtime generation:**
+   - **Generate buttons now SHIP** (env-gated `POST /generate-media` + UI buttons in
+     the Reader + lesson cards, busy spinner, clean `not_configured` state). BUT
+     Magnific shows *"No API key — contact support to enable API access"* → runtime
+     **REST is blocked on Magnific support**, not just a missing key. **Chase API
+     access with the sponsor.** The **MCP build-time path is the working one** (how
+     ALL current audio was made; the deployed box can't reach MCP).
+   - **Confirm the REST call shape** in `audio_video.generate_audio/generate_video`
+     against Freepik/Magnific docs once access lands — current endpoints
+     (`/v1/audio/tts`, `/v1/video/generate`) are PLACEHOLDERS, the one integration point.
+   - **Pre-bake more assets via MCP** for the deployed snapshot: per-article summaries
+     now (article text is real); topic-lesson narration only AFTER a real-Claude bake
+     (mock filler isn't worth narrating). Pre-baked is what judges hear regardless.
+   - **Audio length control** — pick narration length (summary vs full), parallel to
+     the lesson Length picker. (`tasks.lesson` length ≠ audio length.)
+   - **Video gen (J)** — never pre-baked; generate a clip + the card slot already exists.
 3. **Tagging quality** — does `tasks.tag` produce sensible tags? Review the prompt +
    output; tags feed provisional cluster labels, so junk tags = junk labels under mock.
    Tighten the prompt / dedupe / cap count. Check against real Claude output too.
@@ -25,7 +31,9 @@ The vertical slice ships; next session is quality. Backlog from Sameer post-reco
    distinct themes — this also *shows off adaptive clustering* (broad themes, each
    subdivided by its own structure) far better than the mono-topic corpus does.
    After adding, re-bake (`POST /pipeline`) and eyeball the tree depth/breadth.
-5. Merge `fix/flatten-clustering` → `main` once it's polished.
+
+**DONE since record:** `fix/flatten-clustering` is **merged to `main`** (`main` @ `c31d4c5`)
+and `deploy.sh` ships. Magnific REST = "contact support" (no key available yet).
 
 ## Completed THIS session (all on `fix/flatten-clustering`, pushed)
 Nine commits, `9d787a8..a6fb17b`:
