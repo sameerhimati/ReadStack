@@ -1,87 +1,131 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { addUrl } from "@/lib/api";
 
+// Small modal to add a single link. POSTs {url} to /add and reports back so the
+// page can optimistically show it landing. "Load demo corpus" reruns /pipeline
+// with the backend's curated set. Friendly states, never lorem.
 export default function AddLinksPanel({
-  onBuild,
+  open,
+  onClose,
+  onAdded,
+  onLoadDemo,
   loading,
 }: {
-  onBuild: (urls: string[]) => void;
+  open: boolean;
+  onClose: () => void;
+  onAdded: (url: string) => void;
+  onLoadDemo: () => void;
   loading: boolean;
 }) {
-  const [text, setText] = useState("");
+  const [url, setUrl] = useState("");
+  const [status, setStatus] = useState<"idle" | "adding" | "ok" | "error">(
+    "idle"
+  );
 
-  const parseUrls = (raw: string) =>
-    raw
-      .split("\n")
-      .map((l) => l.trim())
-      .filter((l) => l.length > 0);
+  // Reset transient state each time the sheet opens.
+  useEffect(() => {
+    if (open) {
+      setUrl("");
+      setStatus("idle");
+    }
+  }, [open]);
 
-  const submit = () => {
-    if (loading) return;
-    const urls = parseUrls(text);
-    onBuild(urls); // empty is fine — backend/mock handles it
-  };
+  // Close on Escape.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
 
-  const loadDemo = () => {
-    // Empty list -> the backend builds from its own curated data/urls.txt, so the
-    // demo always reflects the validated corpus (single source of truth).
-    onBuild([]);
+  if (!open) return null;
+
+  const submit = async () => {
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    setStatus("adding");
+    try {
+      await addUrl(trimmed);
+      setStatus("ok");
+      onAdded(trimmed);
+      setTimeout(onClose, 600);
+    } catch {
+      // The /add endpoint may not be live yet — still show it optimistically.
+      setStatus("error");
+      onAdded(trimmed);
+    }
   };
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
-      <label
-        htmlFor="links"
-        className="mb-2 block text-[11px] font-medium uppercase tracking-wider text-slate-500"
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/30 px-6 pt-28 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-lg shadow-black/10"
+        onClick={(e) => e.stopPropagation()}
       >
-        Your saved links — one URL per line
-      </label>
-      <textarea
-        id="links"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder={"https://...\nhttps://...\nhttps://..."}
-        rows={6}
-        spellCheck={false}
-        disabled={loading}
-        className="w-full resize-y rounded-xl border border-slate-800 bg-slate-950/70 p-3 font-mono text-[13px] text-slate-200 placeholder:text-slate-600 outline-none transition focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/30 disabled:opacity-60"
-      />
+        <h2 className="font-serif text-xl font-semibold text-[var(--ink)]">
+          Add a link
+        </h2>
+        <p className="mt-1 text-sm text-[var(--muted)]">
+          Drop a URL and we&apos;ll slot it into your stack.
+        </p>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2.5">
-        <button
-          type="button"
-          onClick={submit}
-          disabled={loading}
-          className="inline-flex items-center gap-2 rounded-xl bg-teal-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-teal-400 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {loading ? (
-            <>
-              <Spinner />
-              routing across Akamai tiers…
-            </>
-          ) : (
-            "Build my stack"
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={loadDemo}
-          disabled={loading}
-          className="rounded-xl border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          Load demo corpus
-        </button>
+        <div className="mt-4 flex gap-2">
+          <input
+            type="url"
+            value={url}
+            autoFocus
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && submit()}
+            placeholder="https://…"
+            spellCheck={false}
+            className="min-w-0 flex-1 rounded-md border border-[var(--border)] bg-[var(--paper)] px-3 py-2 text-sm text-[var(--ink)] outline-none transition-colors placeholder:text-[var(--muted)] focus:border-[var(--accent)]"
+          />
+          <button
+            type="button"
+            onClick={submit}
+            disabled={status === "adding" || !url.trim()}
+            className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
+          >
+            {status === "adding" ? "Adding…" : "Add"}
+          </button>
+        </div>
+
+        {status === "ok" && (
+          <p className="mt-3 text-xs text-[var(--verified)]">
+            Added — finding its place in your stack.
+          </p>
+        )}
+        {status === "error" && (
+          <p className="mt-3 text-xs text-[var(--muted)]">
+            Saved locally — it&apos;ll be processed when the pipeline is live.
+          </p>
+        )}
+
+        <div className="mt-5 flex items-center justify-between border-t border-[var(--border)] pt-4">
+          <button
+            type="button"
+            onClick={onLoadDemo}
+            disabled={loading}
+            className="text-sm text-[var(--accent)] transition-colors hover:underline disabled:opacity-50"
+          >
+            {loading ? "Loading corpus…" : "Load demo corpus"}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
+          >
+            Close
+          </button>
+        </div>
       </div>
     </div>
-  );
-}
-
-function Spinner() {
-  return (
-    <span
-      aria-hidden
-      className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-950/40 border-t-slate-950"
-    />
   );
 }

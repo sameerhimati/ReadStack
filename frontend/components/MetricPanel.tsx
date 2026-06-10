@@ -2,45 +2,24 @@
 
 import type { Metrics, Tier } from "@/lib/types";
 
+// Tier colors are semantic: cheap tiers green, mid amber, strong red. The bar
+// should read "mostly green" at a glance — that is the thesis.
 const TIER_META: Record<
   Tier,
-  { label: string; sub: string; bar: string; dot: string; cheap: boolean }
+  { label: string; sub: string; color: string }
 > = {
-  embed: {
-    label: "Embed",
-    sub: "vectorize",
-    bar: "bg-emerald-500",
-    dot: "bg-emerald-400",
-    cheap: true,
-  },
-  weak: {
-    label: "Weak · 8B",
-    sub: "tag · cluster · verify",
-    bar: "bg-teal-500",
-    dot: "bg-teal-400",
-    cheap: true,
-  },
-  mid: {
-    label: "Mid",
-    sub: "lesson draft",
-    bar: "bg-amber-500",
-    dot: "bg-amber-400",
-    cheap: false,
-  },
-  strong: {
-    label: "Strong",
-    sub: "hard cases",
-    bar: "bg-rose-500",
-    dot: "bg-rose-400",
-    cheap: false,
-  },
+  embed: { label: "Embed", sub: "vectorize", color: "var(--verified)" },
+  weak: { label: "Weak · 8B", sub: "tag · cluster · verify", color: "var(--verified)" },
+  mid: { label: "Mid", sub: "lesson draft", color: "var(--unverified)" },
+  strong: { label: "Strong", sub: "hard cases", color: "#c0492e" },
 };
 
 const TIER_ORDER: Tier[] = ["embed", "weak", "mid", "strong"];
 
 export default function MetricPanel({ metrics }: { metrics: Metrics }) {
   const { calls_by_tier, total_calls, savings_x, grounding } = metrics;
-  const total = total_calls || TIER_ORDER.reduce((s, t) => s + calls_by_tier[t], 0);
+  const total =
+    total_calls || TIER_ORDER.reduce((s, t) => s + calls_by_tier[t], 0);
 
   const cheapShare =
     total > 0
@@ -48,91 +27,83 @@ export default function MetricPanel({ metrics }: { metrics: Metrics }) {
       : 0;
 
   return (
-    <section className="rounded-2xl border border-slate-700/60 bg-gradient-to-b from-slate-900/80 to-slate-900/40 p-6">
-      <div className="mb-5 flex items-start justify-between gap-4">
-        <div>
-          <p className="text-[11px] font-medium uppercase tracking-wider text-teal-300/80">
-            The inference choice
-          </p>
-          <h2 className="text-base font-semibold text-slate-100">
-            Where the calls actually went
-          </h2>
-        </div>
-        <div className="text-right">
-          <div className="text-3xl font-bold leading-none text-teal-300 tabular-nums">
-            ≈{savings_x}×
-          </div>
-          <div className="mt-1 text-[11px] text-slate-400">
-            cheaper than all-frontier
-          </div>
-        </div>
-      </div>
-
-      {/* Stacked bar */}
-      <div className="flex h-3.5 w-full overflow-hidden rounded-full bg-slate-800">
-        {TIER_ORDER.map((t) => {
-          const pct = total > 0 ? (calls_by_tier[t] / total) * 100 : 0;
-          if (pct === 0) return null;
-          return (
-            <div
-              key={t}
-              className={`${TIER_META[t].bar} h-full transition-all`}
-              style={{ width: `${pct}%` }}
-              title={`${TIER_META[t].label}: ${calls_by_tier[t]} calls`}
-            />
-          );
-        })}
-      </div>
-
-      {/* Legend */}
-      <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
-        {TIER_ORDER.map((t) => (
-          <div key={t} className="flex items-start gap-2">
-            <span
-              className={`mt-1 h-2 w-2 shrink-0 rounded-full ${TIER_META[t].dot}`}
-            />
-            <div className="min-w-0">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-sm font-semibold text-slate-100 tabular-nums">
-                  {calls_by_tier[t]}
-                </span>
-                <span className="truncate text-xs text-slate-300">
-                  {TIER_META[t].label}
-                </span>
-              </div>
-              <div className="truncate text-[11px] text-slate-500">
-                {TIER_META[t].sub}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Headline numbers */}
-      <div className="mt-5 grid grid-cols-3 gap-3 border-t border-slate-800 pt-5">
-        <Stat value={total_calls.toString()} label="total calls" />
-        <Stat value={`${cheapShare}%`} label="on the cheap tier" />
-        <Stat
+    <section className="space-y-8">
+      {/* Headline stats */}
+      <div className="grid grid-cols-1 gap-px overflow-hidden rounded-md border border-[var(--border)] bg-[var(--border)] sm:grid-cols-3">
+        <Headline
+          value={`≈${savings_x}×`}
+          label="cheaper than all-frontier"
+        />
+        <Headline value={`${cheapShare}%`} label="on the cheap tier" />
+        <Headline
           value={`${grounding.unsupported_caught}/${grounding.checked}`}
-          label="unsupported caught"
+          label="claims caught"
         />
       </div>
 
-      <p className="mt-5 text-xs leading-relaxed text-slate-500">
-        Most calls hit the cheap 8B on an Akamai edge GPU — right model, right
-        GPU, per task.
+      {/* Where the calls went */}
+      <div className="space-y-3">
+        <p className="text-[11px] uppercase tracking-wider text-[var(--muted)]">
+          Where the calls went
+        </p>
+        <div className="flex h-3 w-full overflow-hidden rounded-full border border-[var(--border)] bg-[var(--surface)]">
+          {TIER_ORDER.map((t) => {
+            const pct = total > 0 ? (calls_by_tier[t] / total) * 100 : 0;
+            if (pct === 0) return null;
+            return (
+              <div
+                key={t}
+                className="h-full"
+                style={{ width: `${pct}%`, backgroundColor: TIER_META[t].color }}
+                title={`${TIER_META[t].label}: ${calls_by_tier[t]} calls`}
+              />
+            );
+          })}
+        </div>
+
+        {/* Legend */}
+        <div className="grid grid-cols-2 gap-x-6 gap-y-3 pt-1 sm:grid-cols-4">
+          {TIER_ORDER.map((t) => (
+            <div key={t} className="flex items-start gap-2">
+              <span
+                className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
+                style={{ backgroundColor: TIER_META[t].color }}
+              />
+              <div className="min-w-0">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="font-mono text-sm font-semibold tabular-nums text-[var(--ink)]">
+                    {calls_by_tier[t]}
+                  </span>
+                  <span className="truncate text-xs text-[var(--ink)]">
+                    {TIER_META[t].label}
+                  </span>
+                </div>
+                <div className="truncate text-[11px] text-[var(--muted)]">
+                  {TIER_META[t].sub}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <p className="text-xs text-[var(--muted)]">
+        {total_calls} calls total — most hit the cheap 8B on an Akamai edge GPU.
+        Right model, right GPU, per task.
       </p>
     </section>
   );
 }
 
-function Stat({ value, label }: { value: string; label: string }) {
+function Headline({ value, label }: { value: string; label: string }) {
   return (
-    <div>
-      <div className="text-2xl font-bold leading-none text-slate-100 tabular-nums">
+    <div className="bg-[var(--surface)] px-5 py-6">
+      <div className="font-mono text-2xl font-semibold tabular-nums tracking-tight text-[var(--ink)]">
         {value}
       </div>
-      <div className="mt-1.5 text-[11px] text-slate-500">{label}</div>
+      <div className="mt-2 text-[11px] uppercase tracking-wider text-[var(--muted)]">
+        {label}
+      </div>
     </div>
   );
 }

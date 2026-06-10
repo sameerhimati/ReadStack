@@ -38,7 +38,7 @@ export default function TopicGraph({
   );
 
   const handleNodeClick: NodeMouseHandler = (_e, node) => {
-    // Root isn't selectable as a lesson target.
+    // Root isn't a topic you read; clicking it is a no-op.
     if (node.id === "root") return;
     onSelect(node.id);
   };
@@ -66,7 +66,7 @@ export default function TopicGraph({
         variant={BackgroundVariant.Dots}
         gap={28}
         size={1}
-        color="rgba(148,163,184,0.12)"
+        color="var(--border)"
       />
     </ReactFlow>
   );

@@ -1,81 +1,103 @@
 @import "tailwindcss";
 @import "reactflow/dist/style.css";
 
+/* Warm editorial design system — light default, .dark toggle.
+   Tokens are the single source of truth; reference them via Tailwind
+   arbitrary properties (bg-[--paper]) — never raw hex in JSX. */
 :root {
-  --background: #07090d;
-  --foreground: #e6e9ef;
+  --paper: #fbfaf7;
+  --surface: #ffffff;
+  --ink: #1a1a1a;
+  --muted: #6b6b6b;
+  --accent: #b5562e;
+  --border: rgba(0, 0, 0, 0.1);
+  --verified: #0f8a5f;
+  --unverified: #c2790b;
+}
+
+.dark {
+  --paper: #15140f;
+  --surface: #1c1a14;
+  --ink: #ece8df;
+  --muted: #9a948a;
+  --accent: #e0865c;
+  --border: rgba(255, 255, 255, 0.1);
+  --verified: #34c08a;
+  --unverified: #e0a23a;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-border: var(--border);
+  --color-verified: var(--verified);
+  --color-unverified: var(--unverified);
+
+  --font-serif: "Iowan Old Style", "Charter", Georgia, serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
 }
 
 html {
-  color-scheme: dark;
+  background: var(--paper);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "kern" 1, "liga" 1;
 }
 
-/* Subtle ambient backdrop so the canvas doesn't read as flat black */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
-  background:
-    radial-gradient(60rem 40rem at 15% -10%, rgba(45, 212, 191, 0.07), transparent 60%),
-    radial-gradient(50rem 35rem at 95% 0%, rgba(56, 130, 246, 0.06), transparent 55%);
+.font-mono,
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
 
-/* React Flow theming overrides for dark canvas */
+/* Focus ring — warm accent, restrained. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* React Flow theming — warm, flat, borders not glow. */
 .react-flow__attribution {
   display: none;
 }
 .react-flow__edge-path {
-  stroke: rgba(148, 163, 184, 0.4);
+  stroke: var(--border);
+  stroke-width: 1.5;
+}
+.react-flow__handle {
+  opacity: 0;
 }
 
-/* Topic node bloom-in animation */
-@keyframes bloomIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.6) translateY(8px);
-  }
-  60% {
-    opacity: 1;
-    transform: scale(1.04) translateY(0);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-@keyframes fadeUp {
+/* One subtle staggered fade for the Map "bloom". No scale/bounce. */
+@keyframes bloom {
   from {
     opacity: 0;
-    transform: translateY(10px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
-
-.animate-fade-up {
-  animation: fadeUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+.animate-bloom {
+  animation: bloom 0.35s ease-out both;
 }
 
-/* Thin scrollbars */
+/* Native audio control — neutral so it sits in the warm theme. */
+audio {
+  width: 100%;
+  height: 36px;
+}
+
+/* Thin scrollbars. */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+  scrollbar-color: var(--border) transparent;
 }

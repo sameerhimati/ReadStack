@@ -1,167 +1,140 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { PipelineResponse } from "@/lib/types";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { Article, Lesson, PipelineResponse } from "@/lib/types";
 import { buildStack } from "@/lib/api";
 import { MOCK } from "@/lib/mock";
-import { indexTopics, leafTopics } from "@/lib/layout";
-import AddLinksPanel from "@/components/AddLinksPanel";
+import Nav, { type Tab } from "@/components/Nav";
+import ReadingView from "@/components/ReadingView";
 import TopicGraph from "@/components/TopicGraph";
-import LessonCard from "@/components/LessonCard";
 import MetricPanel from "@/components/MetricPanel";
+import AddLinksPanel from "@/components/AddLinksPanel";
 
 export default function Home() {
-  const [data, setData] = useState<PipelineResponse | null>(null);
-  const [usedMock, setUsedMock] = useState(false);
+  const [data, setData] = useState<PipelineResponse>(MOCK);
+  const [usedMock, setUsedMock] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>("reading");
+  const [addOpen, setAddOpen] = useState(false);
+  const [isDark, setIsDark] = useState(false);
+  const [focusTopicId, setFocusTopicId] = useState<string | null>(null);
 
-  const lessonRef = useRef<HTMLDivElement>(null);
+  // Topic section refs so Map clicks can scroll the Reading list.
+  const topicRefs = useRef(new Map<string, HTMLElement>());
+  const registerTopicRef = useCallback((id: string, el: HTMLElement | null) => {
+    if (el) topicRefs.current.set(id, el);
+    else topicRefs.current.delete(id);
+  }, []);
 
-  // Derived structures from the current pipeline result.
-  const topicIndex = useMemo(
-    () => (data ? indexTopics(data.topics) : null),
-    [data]
-  );
-  const leaves = useMemo(() => (data ? leafTopics(data.topics) : []), [data]);
+  // Sync the theme toggle with the class the no-FOUC script already set.
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains("dark"));
+  }, []);
+
+  const toggleTheme = () => {
+    const next = !document.documentElement.classList.contains("dark");
+    document.documentElement.classList.toggle("dark", next);
+    try {
+      localStorage.setItem("theme", next ? "dark" : "light");
+    } catch {}
+    setIsDark(next);
+  };
+
+  // Derived lookups.
   const lessonByTopic = useMemo(() => {
-    const m = new Map<string, PipelineResponse["lessons"][number]>();
-    data?.lessons.forEach((l) => m.set(l.topic_id, l));
+    const m = new Map<string, Lesson>();
+    data.lessons.forEach((l) => m.set(l.topic_id, l));
     return m;
   }, [data]);
 
-  // The selected lesson resolves to the chosen topic, falling back to the
-  // first leaf so the card is never empty.
-  const activeTopicId = selectedTopicId ?? leaves[0]?.id ?? null;
-  const activeTopic = activeTopicId
-    ? (topicIndex?.get(activeTopicId) ?? null)
-    : null;
-  const activeLesson = activeTopicId
-    ? (lessonByTopic.get(activeTopicId) ?? null)
-    : null;
+  const articleByUrl = useMemo(() => {
+    const m = new Map<string, Article>();
+    data.articles.forEach((a) => m.set(a.url, a));
+    return m;
+  }, [data]);
 
-  async function run(urls: string[]) {
+  async function loadCorpus() {
     setLoading(true);
-    setSelectedTopicId(null);
-    const { data: result, usedMock: mock } = await buildStack(urls);
+    const { data: result, usedMock: mock } = await buildStack([]);
     setData(result);
     setUsedMock(mock);
     setLoading(false);
+    setAddOpen(false);
+    setTab("reading");
   }
 
-  // Seed the page with the mock on first load so it's never an empty canvas.
-  useEffect(() => {
-    setData(MOCK);
-    setUsedMock(true);
-  }, []);
+  // Optimistic add: jump to Reading and flag the topic the link likely joins.
+  // The real topic assignment lands when the pipeline reprocesses; until then
+  // we just surface the Reading tab so the user sees their stack.
+  function handleAdded() {
+    setTab("reading");
+  }
 
-  function selectTopic(id: string) {
-    setSelectedTopicId(id);
-    lessonRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  function focusTopic(id: string) {
+    setTab("reading");
+    setFocusTopicId(id);
+    // Defer scroll until the Reading view has mounted.
+    requestAnimationFrame(() => {
+      topicRefs.current
+        .get(id)
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    window.setTimeout(() => setFocusTopicId(null), 1600);
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-8">
-      {/* Header */}
-      <header className="mb-8">
-        <div className="flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-teal-400 to-sky-500" />
-          <h1 className="text-xl font-bold tracking-tight text-slate-100">
-            ReadStack
-          </h1>
-        </div>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-          Turn your saved-link backlog into a topic graph and grounded
-          bite-size lessons —{" "}
-          <span className="text-slate-300">
-            cheap models do the volume work, strong models only touch what you
-            read.
-          </span>
-        </p>
-      </header>
+    <div className="min-h-screen bg-[var(--paper)]">
+      <Nav
+        tab={tab}
+        onTab={setTab}
+        onAdd={() => setAddOpen(true)}
+        isDark={isDark}
+        onToggleTheme={toggleTheme}
+      />
 
-      {/* Top row: inputs + metric panel side by side on wide screens */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
-        <AddLinksPanel onBuild={run} loading={loading} />
-        {data && <MetricPanel metrics={data.metrics} />}
-      </div>
+      <main className="mx-auto w-full max-w-5xl px-6 py-8">
+        {usedMock && (
+          <p className="mb-6 text-xs text-[var(--muted)]">
+            Showing sample data — connect the pipeline backend to process live
+            links.
+          </p>
+        )}
 
-      {usedMock && (
-        <p className="mt-3 text-[11px] text-slate-500">
-          Showing sample data — connect the pipeline backend to process live
-          links.
-        </p>
-      )}
+        {tab === "reading" && (
+          <ReadingView
+            data={data}
+            lessonByTopic={lessonByTopic}
+            articleByUrl={articleByUrl}
+            focusTopicId={focusTopicId}
+            registerTopicRef={registerTopicRef}
+          />
+        )}
 
-      {/* Topic graph */}
-      <section className="mt-8">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
-            Topic graph
-          </h2>
-          {data && (
-            <span className="text-xs text-slate-500">
-              {data.articles.length} articles · click a topic to read its lesson
-            </span>
-          )}
-        </div>
-        <div className="relative h-[420px] overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/40">
-          {loading ? (
-            <LoadingCanvas />
-          ) : data ? (
-            <TopicGraph
-              root={data.topics}
-              selectedId={activeTopicId}
-              onSelect={selectTopic}
-            />
-          ) : null}
-        </div>
-      </section>
+        {tab === "map" && (
+          <section className="space-y-3">
+            <p className="text-[11px] uppercase tracking-wider text-[var(--muted)]">
+              {data.articles.length} articles · click a topic to read it
+            </p>
+            <div className="relative h-[480px] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
+              <TopicGraph
+                root={data.topics}
+                selectedId={focusTopicId}
+                onSelect={focusTopic}
+              />
+            </div>
+          </section>
+        )}
 
-      {/* Lesson view */}
-      <section className="mt-8" ref={lessonRef}>
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          <h2 className="mr-1 text-sm font-semibold uppercase tracking-wider text-slate-400">
-            Lessons
-          </h2>
-          {/* Quick chips to jump between leaf-topic lessons */}
-          {leaves.map((leaf) => {
-            const active = leaf.id === activeTopicId;
-            return (
-              <button
-                key={leaf.id}
-                type="button"
-                onClick={() => selectTopic(leaf.id)}
-                className={[
-                  "rounded-full border px-3 py-1 text-xs font-medium transition",
-                  active
-                    ? "border-teal-400/70 bg-teal-500/10 text-teal-200"
-                    : "border-slate-700 text-slate-400 hover:border-slate-500 hover:text-slate-200",
-                ].join(" ")}
-              >
-                {leaf.label}
-              </button>
-            );
-          })}
-        </div>
-        <LessonCard lesson={activeLesson} topic={activeTopic} />
-      </section>
+        {tab === "inference" && <MetricPanel metrics={data.metrics} />}
+      </main>
 
-      <footer className="mt-12 border-t border-slate-800 pt-5 text-xs text-slate-600">
-        ReadStack · AI Inference Hack Day · Akamai AI Inference Cloud
-      </footer>
-    </main>
-  );
-}
-
-function LoadingCanvas() {
-  return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 text-slate-400">
-      <span className="h-6 w-6 animate-spin rounded-full border-2 border-slate-700 border-t-teal-400" />
-      <p className="text-sm">routing across Akamai tiers…</p>
-      <p className="text-xs text-slate-600">
-        tagging · embedding · clustering · drafting · verifying
-      </p>
+      <AddLinksPanel
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        onAdded={handleAdded}
+        onLoadDemo={loadCorpus}
+        loading={loading}
+      />
     </div>
   );
 }
