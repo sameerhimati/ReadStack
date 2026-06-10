@@ -159,11 +159,20 @@ export async function regenerateLesson(
 // markdown). Parses defensively; on ANY failure (network, non-200, ok:false,
 // malformed body) returns { ok: false } so the Reader can show an error state
 // instead of crashing.
+// Per-article media, resolved with mediaUrl(). Each is a bare filename (or
+// null when that asset hasn't been generated yet).
+export type ArticleMedia = {
+  audio_full: string | null;
+  audio_summary: string | null;
+  video: string | null;
+};
+
 export type ArticleContent = {
   url: string;
   title: string;
   text: string;
   tags: string[];
+  media?: ArticleMedia;
 };
 
 export type ArticleResponse =
@@ -183,6 +192,16 @@ export async function fetchArticle(url: string): Promise<ArticleResponse> {
     if (!data || !data.ok || typeof data.text !== "string") {
       throw new Error("article returned an unsuccessful/invalid body");
     }
+    const m = data.media;
+    const media: ArticleMedia | undefined =
+      m && typeof m === "object"
+        ? {
+            audio_full: typeof m.audio_full === "string" ? m.audio_full : null,
+            audio_summary:
+              typeof m.audio_summary === "string" ? m.audio_summary : null,
+            video: typeof m.video === "string" ? m.video : null,
+          }
+        : undefined;
     return {
       ok: true,
       article: {
@@ -190,6 +209,7 @@ export async function fetchArticle(url: string): Promise<ArticleResponse> {
         title: data.title ?? url,
         text: data.text,
         tags: Array.isArray(data.tags) ? data.tags : [],
+        media,
       },
     };
   } catch {

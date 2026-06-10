@@ -147,6 +147,21 @@ export function AudioPlayer({
   );
 }
 
+// The per-topic video slot. Honest by design: render the clip only when the
+// lesson actually carries one; absent => render nothing (no dead "generate"
+// affordance). Sized to the card, sits beside the AudioPlayer.
+export function LessonVideo({ lesson }: { lesson: Lesson }) {
+  if (!lesson.video_path) return null;
+  return (
+    <video
+      controls
+      preload="none"
+      src={mediaUrl(lesson.video_path)}
+      className="w-full rounded-md border border-[var(--border)]"
+    />
+  );
+}
+
 // Collapsible list of the articles that ground a lesson. Demoted from the home
 // hierarchy: sources live behind this toggle, collapsed by default.
 export function SourceList({

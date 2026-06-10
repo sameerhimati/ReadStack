@@ -14,6 +14,7 @@ import {
   AudioPlayer,
   LengthPicker,
   LessonProse,
+  LessonVideo,
   SourceList,
   VerifiedBadge,
 } from "./LessonCard";
@@ -154,8 +155,9 @@ function FeaturedLesson({
         <VerifiedBadge lesson={item.lesson} />
       </div>
 
-      <div className="mb-5">
+      <div className="mb-5 space-y-3">
         <AudioPlayer lesson={item.lesson} prominent />
+        <LessonVideo lesson={item.lesson} />
       </div>
 
       {expanded ? (
@@ -265,6 +267,7 @@ function LessonListCard({
       {expanded && (
         <div className="mt-4 space-y-4 border-t border-[var(--border)] pt-4">
           <AudioPlayer lesson={item.lesson} prominent />
+          <LessonVideo lesson={item.lesson} />
           <div className="flex items-center gap-2">
             <span className="text-[11px] uppercase tracking-wider text-[var(--muted)]">
               Length

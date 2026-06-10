@@ -25,6 +25,7 @@ and the next rebuild wires it automatically.
 """
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 import httpx
@@ -32,30 +33,63 @@ import httpx
 from contracts import Lesson
 
 _MEDIA = Path(__file__).parent / "data" / "media"
-_EXTS = (".m4a", ".mp3", ".wav", ".mp4")
+_AUDIO_EXTS = (".m4a", ".mp3", ".wav")
+_VIDEO_EXTS = (".mp4", ".webm")
 
 
-def media_file_for(topic_id: str) -> str | None:
-    """The media filename for a topic if one exists in data/media, else None."""
-    for ext in _EXTS:
-        if (_MEDIA / f"{topic_id}{ext}").exists():
-            return f"{topic_id}{ext}"
+def _find(stem: str, exts: tuple[str, ...]) -> str | None:
+    for ext in exts:
+        if (_MEDIA / f"{stem}{ext}").exists():
+            return f"{stem}{ext}"
     return None
 
 
+def article_key(url: str) -> str:
+    """Stable, filesystem-safe stem for a per-article asset (audio/video)."""
+    return "art_" + hashlib.sha1(url.encode()).hexdigest()[:12]
+
+
+def media_file_for(topic_id: str) -> str | None:
+    """The audio filename for a topic if one exists in data/media, else None."""
+    return _find(topic_id, _AUDIO_EXTS)
+
+
 def apply_audio(lessons: list[Lesson]) -> None:
-    """Overlay audio_path onto lessons from matching data/media files (by topic_id)."""
+    """Overlay audio_path AND video_path onto lessons from matching data/media files.
+
+    A topic gets narration iff data/media/<topic_id>.(m4a|mp3|wav) exists, and a clip
+    iff <topic_id>.(mp4|webm) exists — so generated media survives every rebuild
+    without a contract change."""
     for lesson in lessons:
-        name = media_file_for(lesson.topic_id)
-        if name:
-            lesson.audio_path = name
+        audio = _find(lesson.topic_id, _AUDIO_EXTS)
+        if audio:
+            lesson.audio_path = audio
+        video = _find(lesson.topic_id, _VIDEO_EXTS)
+        if video:
+            lesson.video_path = video
 
 
-def save_asset(url: str, topic_id: str, ext: str = ".mp3") -> str:
-    """Download a Magnific asset URL into data/media/<topic_id><ext>. Returns the filename."""
+def article_media(url: str) -> dict:
+    """Per-article assets keyed by URL hash: full / summary narration + a clip.
+
+    Stems: <key>__full, <key>__summary (audio) and <key> (video). Any missing one
+    is None — the reader shows a generate affordance for those."""
+    key = article_key(url)
+    return {
+        "audio_full": _find(f"{key}__full", _AUDIO_EXTS),
+        "audio_summary": _find(f"{key}__summary", _AUDIO_EXTS),
+        "video": _find(key, _VIDEO_EXTS),
+    }
+
+
+def save_asset(url: str, stem: str, ext: str = ".mp3") -> str:
+    """Download a Magnific asset URL into data/media/<stem><ext>. Returns the filename.
+
+    `stem` is a topic_id for per-topic media or an article_key(+suffix) for
+    per-article media."""
     _MEDIA.mkdir(parents=True, exist_ok=True)
-    dest = _MEDIA / f"{topic_id}{ext}"
-    with httpx.stream("GET", url, timeout=120, follow_redirects=True) as r:
+    dest = _MEDIA / f"{stem}{ext}"
+    with httpx.stream("GET", url, timeout=180, follow_redirects=True) as r:
         r.raise_for_status()
         with open(dest, "wb") as fh:
             for chunk in r.iter_bytes():

@@ -409,7 +409,8 @@ def article(url: str):
     for a in store.all_articles():
         if a.url == url:
             return {"ok": True, "url": a.url, "title": a.title,
-                    "text": a.text, "tags": a.tags}
+                    "text": a.text, "tags": a.tags,
+                    "media": audio_video.article_media(a.url)}
     return {"ok": False, "error": "That article isn't in the stack."}
 
 

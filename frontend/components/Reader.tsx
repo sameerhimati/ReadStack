@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchArticle, type ArticleContent } from "@/lib/api";
+import { fetchArticle, mediaUrl, type ArticleContent } from "@/lib/api";
 import { hostOf } from "@/lib/lessons";
 
 // In-app article reader: a slide-over panel that shows a saved article's
@@ -173,6 +173,8 @@ export default function Reader({
                 </div>
               )}
 
+              <ListenArea media={article.media} />
+
               <div className="mt-6 font-serif text-[17px] leading-relaxed text-[var(--ink)]">
                 {paragraphs.length > 0 ? (
                   paragraphs.map((p, i) => (
@@ -190,6 +192,70 @@ export default function Reader({
           )}
         </div>
       </aside>
+    </div>
+  );
+}
+
+// The per-article media affordance, mirroring LessonCard's AudioPlayer pattern:
+// when an asset exists, a compact native player with a small muted caption;
+// when none of the three exist, a single honest "coming soon" pill. Players are
+// editorial and compact — full-width audio, a contained video clip.
+function ListenArea({ media }: { media?: ArticleContent["media"] }) {
+  const audioSummary = media?.audio_summary;
+  const audioFull = media?.audio_full;
+  const video = media?.video;
+
+  if (!audioSummary && !audioFull && !video) {
+    return (
+      <div className="mt-5">
+        <span className="inline-flex cursor-not-allowed items-center gap-2 rounded-full border border-[var(--border)] px-4 py-1.5 text-xs font-medium text-[var(--muted)]">
+          ▶ Audio coming soon
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-5 space-y-3 border-t border-[var(--border)] pt-4">
+      {audioSummary && (
+        <div className="space-y-1.5">
+          <p className="text-[11px] uppercase tracking-wider text-[var(--muted)]">
+            Summary
+          </p>
+          <audio
+            controls
+            preload="none"
+            src={mediaUrl(audioSummary)}
+            className="w-full"
+          />
+        </div>
+      )}
+      {audioFull && (
+        <div className="space-y-1.5">
+          <p className="text-[11px] uppercase tracking-wider text-[var(--muted)]">
+            Full narration
+          </p>
+          <audio
+            controls
+            preload="none"
+            src={mediaUrl(audioFull)}
+            className="w-full"
+          />
+        </div>
+      )}
+      {video && (
+        <div className="space-y-1.5">
+          <p className="text-[11px] uppercase tracking-wider text-[var(--muted)]">
+            Video
+          </p>
+          <video
+            controls
+            preload="none"
+            src={mediaUrl(video)}
+            className="w-full rounded-md border border-[var(--border)]"
+          />
+        </div>
+      )}
     </div>
   );
 }
