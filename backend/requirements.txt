@@ -4,5 +4,5 @@ httpx
 pydantic>=2
 scikit-learn
 numpy
-readability-lxml
-beautifulsoup4
+trafilatura
+sentence-transformers

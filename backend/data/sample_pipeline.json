@@ -1,0 +1,252 @@
+{
+  "articles": [
+    {
+      "url": "https://claude.com/blog/building-agents-that-reach-production-systems-with-mcp",
+      "title": "Building agents that reach production systems with MCP | Claude",
+      "tags": [
+        "building",
+        "agents",
+        "reach",
+        "production"
+      ]
+    },
+    {
+      "url": "https://github.com/1st1/lat.md",
+      "title": "GitHub - 1st1/lat.md: Agent Lattice: a knowledge graph for your codebase, written in markdown.",
+      "tags": [
+        "github",
+        "agent",
+        "lattice",
+        "knowledge"
+      ]
+    },
+    {
+      "url": "https://github.com/karpathy/autoresearch",
+      "title": "GitHub - karpathy/autoresearch: AI agents running research on single-GPU nanochat training automatically",
+      "tags": [
+        "github",
+        "karpathy",
+        "autoresearch",
+        "agents"
+      ]
+    },
+    {
+      "url": "https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/",
+      "title": "Prompt Engineering",
+      "tags": [
+        "prompt",
+        "engineering"
+      ]
+    },
+    {
+      "url": "https://paulgraham.com/greatwork.html",
+      "title": "How to Do Great Work",
+      "tags": [
+        "great"
+      ]
+    },
+    {
+      "url": "https://research.google/blog/a-decoder-only-foundation-model-for-time-series-forecasting/",
+      "title": "A decoder-only foundation model for time-series forecasting",
+      "tags": [
+        "decoder",
+        "foundation",
+        "model",
+        "series"
+      ]
+    },
+    {
+      "url": "https://situational-awareness.ai/",
+      "title": "Introduction - SITUATIONAL AWARENESS: The Decade Ahead",
+      "tags": [
+        "introduction",
+        "situational",
+        "awareness",
+        "decade"
+      ]
+    },
+    {
+      "url": "https://twiecki.io/blog/2015/11/10/mcmc-sampling/",
+      "title": "while my_mcmc: gently(samples) - MCMC sampling for dummies",
+      "tags": [
+        "gently",
+        "samples",
+        "sampling",
+        "dummies"
+      ]
+    },
+    {
+      "url": "https://twiecki.io/blog/2018/05/03/copulas/",
+      "title": "while my_mcmc: gently(samples) - An intuitive, visual guide to copulas",
+      "tags": [
+        "gently",
+        "samples",
+        "intuitive",
+        "visual"
+      ]
+    },
+    {
+      "url": "https://unsloth.ai/blog/rl-environments",
+      "title": "Reinforcement Learning environments and how to build them",
+      "tags": [
+        "reinforcement",
+        "learning",
+        "environments",
+        "build"
+      ]
+    },
+    {
+      "url": "https://www.anthropic.com/engineering/april-23-postmortem",
+      "title": "An update on recent Claude Code quality reports",
+      "tags": [
+        "update",
+        "recent",
+        "claude",
+        "quality"
+      ]
+    },
+    {
+      "url": "https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents",
+      "title": "Effective harnesses for long-running agents",
+      "tags": [
+        "effective",
+        "harnesses",
+        "running",
+        "agents"
+      ]
+    },
+    {
+      "url": "https://www.anthropic.com/engineering/harness-design-long-running-apps",
+      "title": "Harness design for long-running application development",
+      "tags": [
+        "harness",
+        "design",
+        "running",
+        "application"
+      ]
+    },
+    {
+      "url": "https://www.anthropic.com/engineering/multi-agent-research-system",
+      "title": "How we built our multi-agent research system",
+      "tags": [
+        "built",
+        "multi",
+        "agent",
+        "research"
+      ]
+    },
+    {
+      "url": "https://www.anthropic.com/engineering/writing-tools-for-agents",
+      "title": "Writing effective tools for AI agents\u2014using AI agents",
+      "tags": [
+        "agents",
+        "writing",
+        "effective",
+        "tools"
+      ]
+    },
+    {
+      "url": "https://www.news.aakashg.com/p/autoresearch-guide-for-pms",
+      "title": "PM's Guide to Karpathy's Autoresearch",
+      "tags": [
+        "guide",
+        "karpathy",
+        "autoresearch"
+      ]
+    }
+  ],
+  "topics": {
+    "id": "t0",
+    "label": "Agents",
+    "article_urls": [
+      "https://claude.com/blog/building-agents-that-reach-production-systems-with-mcp",
+      "https://github.com/1st1/lat.md",
+      "https://github.com/karpathy/autoresearch",
+      "https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/",
+      "https://paulgraham.com/greatwork.html",
+      "https://research.google/blog/a-decoder-only-foundation-model-for-time-series-forecasting/",
+      "https://situational-awareness.ai/",
+      "https://twiecki.io/blog/2015/11/10/mcmc-sampling/",
+      "https://twiecki.io/blog/2018/05/03/copulas/",
+      "https://unsloth.ai/blog/rl-environments",
+      "https://www.anthropic.com/engineering/april-23-postmortem",
+      "https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents",
+      "https://www.anthropic.com/engineering/harness-design-long-running-apps",
+      "https://www.anthropic.com/engineering/multi-agent-research-system",
+      "https://www.anthropic.com/engineering/writing-tools-for-agents",
+      "https://www.news.aakashg.com/p/autoresearch-guide-for-pms"
+    ],
+    "children": [
+      {
+        "id": "t1",
+        "label": "Agents",
+        "article_urls": [
+          "https://claude.com/blog/building-agents-that-reach-production-systems-with-mcp",
+          "https://github.com/1st1/lat.md",
+          "https://github.com/karpathy/autoresearch",
+          "https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/",
+          "https://paulgraham.com/greatwork.html",
+          "https://research.google/blog/a-decoder-only-foundation-model-for-time-series-forecasting/",
+          "https://situational-awareness.ai/",
+          "https://unsloth.ai/blog/rl-environments",
+          "https://www.anthropic.com/engineering/april-23-postmortem",
+          "https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents",
+          "https://www.anthropic.com/engineering/harness-design-long-running-apps",
+          "https://www.anthropic.com/engineering/multi-agent-research-system",
+          "https://www.anthropic.com/engineering/writing-tools-for-agents",
+          "https://www.news.aakashg.com/p/autoresearch-guide-for-pms"
+        ],
+        "children": [],
+        "depth": 1
+      },
+      {
+        "id": "t2",
+        "label": "Gently",
+        "article_urls": [
+          "https://twiecki.io/blog/2015/11/10/mcmc-sampling/",
+          "https://twiecki.io/blog/2018/05/03/copulas/"
+        ],
+        "children": [],
+        "depth": 1
+      }
+    ],
+    "depth": 0
+  },
+  "lessons": [
+    {
+      "topic_id": "t1",
+      "script": "**Agents** \u2014 a quick synthesis of 14 saved reads. Building agents that reach production systems with MCP | Claude adds another angle. GitHub - 1st1/lat.md: Agent Lattice: a knowledge graph for your codebase, written in markdown. adds another angle. GitHub - karpathy/autoresearch: AI agents running research on single-GPU nanochat training automatically adds another angle. The throughline: ideas here reinforce each other, so reading them together compounds faster than one at a time. (Mock lesson \u2014 swap for the grounded model output.)",
+      "grounded": true,
+      "grounding_score": 0.84,
+      "unsupported": [],
+      "video_path": null,
+      "audio_path": null
+    },
+    {
+      "topic_id": "t2",
+      "script": "**Gently** \u2014 a quick synthesis of 2 saved reads. while my_mcmc: gently(samples) - MCMC sampling for dummies adds another angle. while my_mcmc: gently(samples) - An intuitive, visual guide to copulas adds another angle. The throughline: ideas here reinforce each other, so reading them together compounds faster than one at a time. (Mock lesson \u2014 swap for the grounded model output.)",
+      "grounded": false,
+      "grounding_score": 0.5,
+      "unsupported": [],
+      "video_path": null,
+      "audio_path": null
+    }
+  ],
+  "metrics": {
+    "calls_by_tier": {
+      "embed": 16,
+      "weak": 20,
+      "mid": 1,
+      "strong": 2
+    },
+    "total_calls": 39,
+    "cost_usd": 0.04432,
+    "baseline_cost_usd": 0.46032,
+    "savings_x": 10.4,
+    "grounding": {
+      "checked": 2,
+      "unsupported_caught": 1,
+      "catch_rate": 0.5
+    }
+  }
+}
