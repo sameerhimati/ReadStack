@@ -1,18 +1,23 @@
 #!/usr/bin/env bash
 #
 # ReadStack one-shot deploy — run ON the Akamai (Linode) CPU app box as root.
-# Stands up backend (uvicorn) + frontend (Next) behind Caddy with auto-HTTPS,
-# wired to pgvector + Anthropic. No GPU. Idempotent: safe to re-run to redeploy.
+# Stands up backend (uvicorn) + frontend (Next) behind Caddy, wired to pgvector
+# + Anthropic. No GPU. Idempotent: safe to re-run to redeploy.
 #
-# Prereqs (see DEPLOY.md Part 1): a pgvector box reachable from this box, and an
-# A record pointing your domain at THIS box's IP (Caddy needs it for the cert).
+# Works in two modes, driven by ORIGIN (the public URL Caddy serves and the
+# frontend calls):
+#   * Bare IP / HTTP   (no domain):     ORIGIN=http://45.79.100.235
+#   * Domain / auto-HTTPS:              ORIGIN=https://readstack.example.com
+#                                       (or set DOMAIN=readstack.example.com)
+# Caddy serves plain HTTP for an http:// origin, and gets a Let's Encrypt cert
+# automatically for a domain. (HTTPS needs an A record pointing at THIS box.)
 #
 # Usage:
 #   1. Create /opt/readstack-deploy.env (or export these in your shell):
-#        DOMAIN=readstack.itamih.com
+#        ORIGIN=http://45.79.100.235        # or DOMAIN=readstack.example.com
 #        DATABASE_URL=postgresql://user:pass@<db-ip>:5432/readstack
 #        ANTHROPIC_API_KEY=sk-ant-...
-#        # optional: REPO_URL, BRANCH, MOCK=1 (skip Anthropic, run on mock)
+#        # optional: REPO_URL, BRANCH (default main), MOCK=1 (skip Anthropic)
 #   2. curl -fsSL <raw deploy.sh> -o deploy.sh   # or scp it up
 #   3. sudo bash deploy.sh
 #
@@ -25,7 +30,11 @@ ENV_FILE="${ENV_FILE:-/opt/readstack-deploy.env}"
 REPO_URL="${REPO_URL:-https://github.com/sameerhimati/ReadStack.git}"
 BRANCH="${BRANCH:-main}"
 APP_DIR="${APP_DIR:-/opt/readstack}"
-DOMAIN="${DOMAIN:?Set DOMAIN (e.g. readstack.itamih.com)}"
+
+# ORIGIN is the single public origin. Fall back to https://DOMAIN for back-compat.
+ORIGIN="${ORIGIN:-}"
+if [ -z "$ORIGIN" ] && [ -n "${DOMAIN:-}" ]; then ORIGIN="https://$DOMAIN"; fi
+: "${ORIGIN:?Set ORIGIN (e.g. http://1.2.3.4 or https://readstack.example.com), or DOMAIN for HTTPS}"
 
 if [ "${MOCK:-0}" != "1" ]; then
   : "${DATABASE_URL:?Set DATABASE_URL (or MOCK=1 to run without a DB/key)}"
@@ -34,7 +43,7 @@ fi
 
 [ "$(id -u)" -eq 0 ] || { echo "Run as root (sudo bash deploy.sh)"; exit 1; }
 
-echo "==> Deploying ReadStack to https://$DOMAIN  (branch: $BRANCH)"
+echo "==> Deploying ReadStack to $ORIGIN  (branch: $BRANCH)"
 
 # --- 1. system packages ------------------------------------------------------
 export DEBIAN_FRONTEND=noninteractive
@@ -79,7 +88,7 @@ chmod 600 "$APP_DIR/backend/.env"
 
 # --- 4. frontend (static-served Next, client-fetches the API) ----------------
 echo "==> Frontend: build"
-echo "NEXT_PUBLIC_API_URL=https://$DOMAIN" > "$APP_DIR/frontend/.env.production"
+echo "NEXT_PUBLIC_API_URL=$ORIGIN" > "$APP_DIR/frontend/.env.production"
 ( cd "$APP_DIR/frontend" && npm ci --no-audit --no-fund && npm run build )
 
 # --- 5. systemd units (survive reboot + disconnect) --------------------------
@@ -121,10 +130,11 @@ systemctl daemon-reload
 systemctl enable --now readstack-backend readstack-frontend
 systemctl restart readstack-backend readstack-frontend
 
-# --- 6. Caddy: single origin, auto-HTTPS, no CORS ----------------------------
+# --- 6. Caddy: single origin, no CORS ----------------------------------------
+# An http:// origin -> plain HTTP (no cert); a domain -> automatic HTTPS.
 echo "==> Caddyfile"
 cat > /etc/caddy/Caddyfile <<EOF
-$DOMAIN {
+$ORIGIN {
     # API -> uvicorn
     handle /pipeline*          { reverse_proxy 127.0.0.1:8000 }
     handle /snapshot*          { reverse_proxy 127.0.0.1:8000 }
@@ -153,6 +163,6 @@ curl -fsS -m 600 -X POST http://127.0.0.1:8000/pipeline \
   || echo "!! Bake failed — check: journalctl -u readstack-backend -n 50"
 
 echo
-echo "==> Done.  Open:  https://$DOMAIN"
+echo "==> Done.  Open:  $ORIGIN"
 echo "    logs:   journalctl -u readstack-backend -f   |   journalctl -u readstack-frontend -f"
 echo "    rebake: curl -X POST http://127.0.0.1:8000/pipeline -d '{}' -H 'Content-Type: application/json'"
