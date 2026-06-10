@@ -2,61 +2,86 @@
 > Last updated: 2026-06-10
 
 ## Completed This Session
-- [x] Initialized public repo (github.com/sameerhimati/ReadStack), 9 commits on `main`
-- [x] Built Wave 1 vertical slice (runs end-to-end under `MOCK_INFERENCE=1`):
-  - `ingest.py` (trafilatura, concurrent, fault-tolerant) — **real**
-  - `cluster.py` (embeddings → TopicNode tree via `router.should_split`) — **real**
-  - `tasks.py` (tag/embed/cluster_name/lesson/verify) — real routing+metrics, **mock outputs**
-  - `akamai.py` (MOCK_INFERENCE mode + local sentence-transformers embed fallback)
-  - `metrics.py` (tier counts, cost-vs-all-strong, grounding catch-rate)
-  - `main.py` (`/pipeline` wired), Next.js `frontend/` (builds clean)
-- [x] Replaced X-heavy corpus → **67 validated web articles** (`data/urls.txt`)
-- [x] Tuned clustering (ward bisection + thresholds) → 92% cheap-tier, 15.3× savings, 3/12 claims caught
-- [x] Diagnosed the topic graph as nonsensical (deep binary tree + mock labels)
-- [x] Wrote `design.md` (warm-editorial system from LibStack/personal-site/atlas)
-- [x] **Locked the redesign plan** → `~/.claude/plans/ancient-doodling-river.md`
+Executed the approved redesign (`~/.claude/plans/synthetic-finding-shell.md`).
+Six commits on branch `fix/flatten-clustering` (each = one logical step):
+- [x] **Flatten clustering** (`5ff395a`) — `cluster.py` now does flat k-way top level
+  (k by silhouette, 5–7) + ONE `should_split`-gated sub-level. Max depth 2. On the
+  67-corpus: 6 top topics / 13 leaves, 91% cheap-tier (was a deep binary cascade).
+- [x] **SQLite store + `/add`** (`a0e10d6`) — `store.py` (articles + cached snapshot,
+  embeddings as float32 blobs). `/pipeline` rebuilds from the store (warm ≈0.1s vs
+  ≈20s re-fetch). `/add` ingests one URL → nearest-centroid assign → persist.
+  Survives restart. `/media` mounted for audio.
+- [x] **Frontend rebuilt articles-first** (`e46ba24`) — warm-editorial (terracotta/
+  paper, serif reading, dark toggle), Reading/Map/Inference tabs, "Verified against
+  your sources" badge replacing "grounded". Build clean. (Agent caught a real
+  Tailwind v4 bug: bare `[--token]` doesn't expand — uses `[var(--token)]`/color-mix.)
+- [x] **Add flow** (`76b7cd6`) — bookmarklet + unpacked MV3 extension → `/add`.
+- [x] **Lesson audio wired** (`08f8562`) — `audio_video.py`: download Magnific asset +
+  `apply_audio()` overlays `audio_path` by topic_id on every rebuild. Proven on the
+  agent-security lesson with a local placeholder narration.
+- [x] **Live-GPU prep** (`041ccd1`) — `GET /snapshot` (zero-inference cached read,
+  loaded on mount); `akamai.py` env-overridable model ids + bounded/retried chat;
+  `tasks.py` distinct parent/child labels (avoid param) + bounded prompts.
 
 ## Current State
-- **Branch:** main
-- **Last commit:** `6895c5c` Add design system + audio_path field
-- **Build:** passing (backend pipeline runs; `frontend` `npm run build` clean)
+- **Branch:** `fix/flatten-clustering` — **6 commits ahead of `main`, NOT pushed/merged.**
+  (Branch name is stale; it holds the whole redesign. Decide: merge to main / open PR.)
+- **Last commit:** `041ccd1` Prep for live GPU: cached read-path + bounded inference
+- **Build:** passing (backend runs under `MOCK_INFERENCE=1`; `frontend` `npm run build` clean)
 - **Uncommitted changes:** none (clean tree)
-- **Blockers:** Akamai vLLM endpoint pending (Sameer provisioning a **GPU Linode**).
-  Magnific MCP is **now connected/authed → audio unblocked.**
+- **Blockers (both external, both Sameer's to clear):**
+  - **GPU Linode** — ticket submitted 2026-06-10, pending. `akamai.py` endpoint waits on it.
+  - **Magnific = premium-gated.** MCP is authed but `account_balance`/`audio_tts` return
+    "requires a premium account." Real voice blocked until premium (likely comped at the
+    event). Placeholder audio stands in; swap is one MCP call.
 
 ## Next Session Should
-1. **Opening gambit:** Open `~/.claude/plans/ancient-doodling-river.md` (the approved
-   plan) + `backend/cluster.py`. Execute **Step 1 — flatten clustering**: replace the
-   recursive binary `_split` with flat k-way (~5–7 top topics) + ONE `should_split`-gated
-   sub-level (max depth 2). Re-run `MOCK_INFERENCE=1` on the 67-URL corpus and eyeball the tree.
-2. Then **parallel agents** (per plan): frontend rebuild articles-first per `design.md`
-   (Reading/Map/Inference tabs, "Verified against your sources" badge); `backend/store.py`
-   SQLite + `POST /add` (incremental nearest-centroid assign); bookmarklet + minimal MV3 `extension/`.
-3. As blockers clear: wire real `tasks.py` prompts when Akamai lands; **generate lesson
-   audio via the now-connected Magnific MCP** (build-time, store under `data/media/`, set `audio_path`).
-4. Run `/design-review` on the live articles-first UI.
+1. **Opening gambit — deploy on mock first (de-risks the public URL before the GPU lands).**
+   Create `backend/Dockerfile`, a `Caddyfile` (auto-HTTPS, serve frontend + reverse-proxy
+   `/snapshot`/`/pipeline`/`/add`/`/media` → uvicorn), and `DEPLOY.md`. Then provision a
+   **4GB CPU Linode**, deploy, run one `POST /pipeline` to bake the snapshot, confirm a
+   browser hits `GET /snapshot` over HTTPS. (Task #7.)
+2. **When the GPU ticket clears:** on the GPU Linode `ollama serve` + `ollama pull
+   llama3.1:8b`; on the backend set `AKAMAI_INFERENCE_URL=http://<gpu>:11434`,
+   `AKAMAI_MODEL_WEAK=llama3.1:8b`, unset `MOCK_INFERENCE`; one `POST /pipeline` to bake
+   real lessons/labels; eyeball that labels are distinct and lessons grounded.
+3. **Polish:** run `/design-review` on the live articles-first UI; run the demo twice.
 
 ## Context to Remember
-- **Two Claude sessions share this repo.** THIS session owns A/C/D/E + plumbing + corpus.
-  The OTHER session owns `tasks.py` real prompts + `akamai.py` endpoint + Magnific wiring.
-  **Coordinate, don't overwrite** `tasks.py`/`akamai.py`.
-- **Linode = Akamai.** GPU Linode = the vLLM endpoint for `akamai.py`; Linode Object
-  Storage = audio/static hosting; Linode managed Postgres = where SQLite store lifts to.
-  Pick a **GPU plan** when creating the Linode (plain VM won't serve models).
-- **Metric is honest at 15×, not 50×** — the few strong lesson/verify calls weigh heavily
-  on only 67 articles; the ratio grows with backlog size. Pitch it that way.
-- **Magnific is an MCP (OAuth), not a backend API** — generate audio at build-time via the
-  MCP in the Claude session, not from the FastAPI runtime. (Runtime would need the Freepik HTTP API.)
-- **Embeddings** auto-fall-back to local `all-MiniLM-L6-v2` when no Akamai endpoint — so
-  clustering always works offline.
-- `MOCK_INFERENCE=1` (or no `AKAMAI_INFERENCE_URL`) stubs chat but keeps routing/metrics real.
-- Servers may still be running on :8000 / :3000 from this session.
+- **Architecture: build-once / read-many.** `POST /pipeline` is the (admin) rebuild and is
+  the ONLY path that runs LLM inference. Judges/views hit `GET /snapshot` (cached, zero
+  inference) so the GPU is never hammered and views cost nothing. Frontend loads `/snapshot`
+  on mount; "Load demo corpus" is the explicit rebuild.
+- **Inference is provider-agnostic.** `akamai.py` is OpenAI-compatible and model ids are env
+  vars → **Ollama and vLLM are both drop-in, zero code change** (`{BASE}/v1/chat/completions`).
+  Decision: **start with Ollama** (fast, our low-concurrency-by-design makes its weaker
+  batching irrelevant); swap to vLLM later only if we want the throughput/pitch.
+- **Routing metric is honest regardless of which models physically exist** — it's computed
+  from `route()` decisions + `metrics.COST_PER_CALL`, not live calls. Fine to point every
+  tier at the same 8B for the demo.
+- **Demo audio detail:** the wired lesson is **t12** (agent security — lethal trifecta /
+  securing LLM agents / CaMeL), file `backend/data/media/t12.m4a` (gitignored). `audio_path`
+  lives in the SQLite snapshot and is re-applied on every rebuild by filename match
+  (`audio_video.apply_audio`). **Topic ids (t12 etc.) are only stable for the canonical
+  67-URL corpus build; an `/add` before the demo reshuffles ids** → regenerate audio named
+  for the new leaf id if that happens. KMeans is `random_state=0` so the 67-build is
+  deterministic.
+- **Both `*.db` and `data/media/` are gitignored** — the DB and audio live on the machine,
+  not in git. A fresh clone needs one `POST /pipeline` to rebuild the snapshot.
+- **Hosting plan (decided):** single 4GB CPU Linode + Caddy for backend+frontend (one HTTPS
+  origin, no CORS/mixed-content), co-located with the GPU Linode. **The mixed-content trap:
+  HTTPS frontend → HTTP backend silently blocks every fetch** — Caddy single-origin avoids it.
+  pgvector + Linode Object Storage are real but **post-demo** (SQLite + local `/media` ship now).
+- **The extension is vision-garnish, not demo-critical** (decided) — judges won't install it;
+  the useful add path is the in-app `+ Add`. Keep it, don't feature it, don't invest more.
+- **Possible follow-up Sameer flagged:** a `POST /ask` RAG endpoint (cosine top-k over the
+  store → grounded answer) + article chunking. Not built, not in scope; store already supports it.
 
 ## Start Command
 ```
-# backend
-cd backend && MOCK_INFERENCE=1 .venv/bin/uvicorn main:app --reload
-# frontend (separate terminal)
+# backend (mock until the GPU lands)
+cd backend && MOCK_INFERENCE=1 .venv/bin/uvicorn main:app --port 8000 --reload
+# frontend
 cd frontend && npm run dev
-# sanity: curl -s localhost:8000/health
+# sanity: curl -s localhost:8000/snapshot | head -c 200
 ```
