@@ -117,7 +117,7 @@ export const MOCK: PipelineResponse = {
       audio_path: "/audio/efficient-inference.mp3",
       video_path: null,
       script:
-        "The expensive part of running a model isn't the model — it's running the wrong size of model for the job. Most of a reading pipeline is bulk work: tag this, embed that, check whether a sentence is supported. An 8B model handles all of it at a fraction of the cost, and only the text a human actually reads gets escalated to a stronger model. Mixture-of-experts pushes the same idea inside the network: you only pay for the experts a token activates. The lesson across your stack is the same one twice — spend compute where attention is, not everywhere.",
+        "The expensive part of running a model isn't the model — it's running the **wrong size** of model for the job.\n\nMost of a reading pipeline is bulk work:\n\n- tag this\n- embed that\n- check whether a sentence is supported\n\nAn 8B model handles all of it at a fraction of the cost, and only the text a human actually reads gets escalated to a stronger model. Mixture-of-experts pushes the same idea inside the network: you only pay for the experts a token activates.\n\nThe lesson across your stack is the same one twice — **spend compute where attention is, not everywhere.**",
     },
     {
       topic_id: "t-serving",
@@ -144,7 +144,7 @@ export const MOCK: PipelineResponse = {
       audio_path: "/audio/grounding.mp3",
       video_path: null,
       script:
-        "A summary that can't point back to its source is a guess wearing a suit. Grounding flips the default: a claim is allowed only if a passage supports it, otherwise it's cut or flagged. The cheap part is that you don't need a frontier model to check this — a small verifier reading 'does sentence X follow from passage Y?' catches most fabrications for almost nothing. That's the whole trick of this stack: the model that writes can be strong, but the model that keeps it honest can be tiny and still pay for itself.",
+        "A summary that can't point back to its source is **a guess wearing a suit.** Grounding flips the default: a claim is allowed only if a passage supports it, otherwise it's cut or flagged.\n\nThe cheap part:\n\n- you don't need a frontier model to check this\n- a small verifier reading *does sentence X follow from passage Y?* catches most fabrications for almost nothing\n\nThat's the whole trick of this stack: the model that writes can be strong, but the model that keeps it honest can be **tiny and still pay for itself.**",
     },
   ],
 

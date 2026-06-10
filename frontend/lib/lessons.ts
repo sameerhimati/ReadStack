@@ -66,9 +66,23 @@ export function hostOf(url: string): string {
   }
 }
 
+// Strip markdown markers so a plaintext teaser never shows literal **, leading
+// bullet glyphs, or heading hashes. The lead/synthesis are rendered as plain
+// text (not through ReactMarkdown), so they must be clean at the source.
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/\*\*/g, "")
+    .replace(/(^|\s)[*_](?=\S)/g, "$1")
+    .replace(/^\s*#{1,6}\s*/gm, "")
+    .replace(/^\s*[-•]\s*/gm, "")
+    .trim();
+}
+
 // First ~N sentences of a script, for the hero lead and one-line synthesis.
+// Markdown markers are stripped so the teaser reads as clean prose.
 export function firstSentences(text: string, n: number): string {
-  const parts = text.trim().match(/[^.!?]+[.!?]+/g);
-  if (!parts || parts.length === 0) return text.trim();
+  const clean = stripMarkdown(text);
+  const parts = clean.match(/[^.!?]+[.!?]+/g);
+  if (!parts || parts.length === 0) return clean;
   return parts.slice(0, n).join(" ").trim();
 }

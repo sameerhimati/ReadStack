@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
 import type { Article, Lesson } from "@/lib/types";
 import { mediaUrl } from "@/lib/api";
 import { hostOf } from "@/lib/lessons";
@@ -150,14 +151,66 @@ export function SourceList({
   );
 }
 
-// Full lesson prose at reading measure.
+// Full lesson prose at reading measure. The script is markdown (bold, bullets,
+// paragraphs); we render it with explicit element styling — no `prose` plugin —
+// so it stays in the warm serif editorial voice instead of looking like default
+// GitHub markdown.
 export function LessonProse({ script }: { script: string }) {
   return (
-    <p className="max-w-[68ch] whitespace-pre-line font-serif text-[17px] leading-relaxed text-[var(--ink)]">
-      {script}
-    </p>
+    <div className="max-w-[68ch] font-serif text-[17px] leading-relaxed text-[var(--ink)]">
+      <ReactMarkdown components={lessonProseComponents}>{script}</ReactMarkdown>
+    </div>
   );
 }
+
+// Element overrides keep the markdown in the editorial system: serif body,
+// CSS-token colors, generous-but-restrained spacing, real disc bullets.
+const lessonProseComponents = {
+  p: ({ ...props }) => <p className="mt-4 first:mt-0" {...props} />,
+  strong: ({ ...props }) => (
+    <strong className="font-semibold text-[var(--ink)]" {...props} />
+  ),
+  em: ({ ...props }) => <em className="italic" {...props} />,
+  ul: ({ ...props }) => (
+    <ul className="mt-4 list-disc space-y-1.5 pl-5" {...props} />
+  ),
+  ol: ({ ...props }) => (
+    <ol className="mt-4 list-decimal space-y-1.5 pl-5" {...props} />
+  ),
+  li: ({ ...props }) => <li className="pl-1 marker:text-[var(--muted)]" {...props} />,
+  h1: ({ ...props }) => (
+    <h2
+      className="mt-6 font-serif text-2xl font-semibold tracking-tight text-[var(--ink)] first:mt-0"
+      {...props}
+    />
+  ),
+  h2: ({ ...props }) => (
+    <h2
+      className="mt-6 font-serif text-xl font-semibold tracking-tight text-[var(--ink)] first:mt-0"
+      {...props}
+    />
+  ),
+  h3: ({ ...props }) => (
+    <h3
+      className="mt-5 font-serif text-lg font-semibold tracking-tight text-[var(--ink)] first:mt-0"
+      {...props}
+    />
+  ),
+  a: ({ ...props }) => (
+    <a
+      className="text-[var(--accent)] underline underline-offset-2 transition-opacity hover:opacity-80"
+      target="_blank"
+      rel="noopener noreferrer"
+      {...props}
+    />
+  ),
+  blockquote: ({ ...props }) => (
+    <blockquote
+      className="mt-4 border-l-2 border-[var(--border)] pl-4 italic text-[var(--muted)]"
+      {...props}
+    />
+  ),
+};
 
 function lastSentence(text: string): string {
   const parts = text.trim().match(/[^.!?]+[.!?]+/g);
