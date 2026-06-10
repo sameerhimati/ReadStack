@@ -217,6 +217,41 @@ export async function fetchArticle(url: string): Promise<ArticleResponse> {
   }
 }
 
+// POST a media generation request to /generate-media. The endpoint blocks until
+// the asset is generated+saved (or fails), so callers show a spinner. Three
+// outcomes mirror the backend contract: success carries the media `path` (play
+// via mediaUrl); not_configured means no server key (expected today — surface
+// the message, don't fake success); error carries a message. Parses defensively
+// and on ANY network/parse failure returns { ok: false } so the UI can keep the
+// Generate affordance instead of crashing.
+export type GenerateMediaResponse =
+  | { ok: true; kind?: "audio" | "video"; path: string }
+  | { ok: false; status?: "not_configured" | "error"; message?: string };
+
+export async function generateMedia(opts: {
+  kind: "audio" | "video";
+  scope: "article" | "topic";
+  ref: string;
+  length?: "summary" | "full";
+}): Promise<GenerateMediaResponse> {
+  try {
+    const res = await fetch(`${API_URL}/generate-media`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(opts),
+    });
+    if (!res.ok) throw new Error(`generate-media returned ${res.status}`);
+    const data = (await res.json()) as GenerateMediaResponse;
+    if (data && data.ok && typeof (data as { path?: unknown }).path === "string") {
+      return data;
+    }
+    if (data && data.ok === false) return data;
+    throw new Error("generate-media returned an invalid body");
+  } catch {
+    return { ok: false };
+  }
+}
+
 // Resolve a stored audio_path (may be a bare filename or a path) to the
 // backend's /media/<file> route.
 export function mediaUrl(audioPath: string): string {

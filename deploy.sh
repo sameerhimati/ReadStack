@@ -132,6 +132,7 @@ $DOMAIN {
     handle /article*           { reverse_proxy 127.0.0.1:8000 }
     handle /lesson/*           { reverse_proxy 127.0.0.1:8000 }
     handle /topic/*            { reverse_proxy 127.0.0.1:8000 }
+    handle /generate-media*    { reverse_proxy 127.0.0.1:8000 }
     handle /media/*            { reverse_proxy 127.0.0.1:8000 }
     handle /health*            { reverse_proxy 127.0.0.1:8000 }
     # everything else -> the Next frontend

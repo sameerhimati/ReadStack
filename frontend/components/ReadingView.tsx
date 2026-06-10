@@ -156,8 +156,12 @@ function FeaturedLesson({
       </div>
 
       <div className="mb-5 space-y-3">
-        <AudioPlayer lesson={item.lesson} prominent />
-        <LessonVideo lesson={item.lesson} />
+        <AudioPlayer
+          lesson={item.lesson}
+          prominent
+          onLessonUpdated={onLessonUpdated}
+        />
+        <LessonVideo lesson={item.lesson} onLessonUpdated={onLessonUpdated} />
       </div>
 
       {expanded ? (
@@ -266,8 +270,12 @@ function LessonListCard({
 
       {expanded && (
         <div className="mt-4 space-y-4 border-t border-[var(--border)] pt-4">
-          <AudioPlayer lesson={item.lesson} prominent />
-          <LessonVideo lesson={item.lesson} />
+          <AudioPlayer
+            lesson={item.lesson}
+            prominent
+            onLessonUpdated={onLessonUpdated}
+          />
+          <LessonVideo lesson={item.lesson} onLessonUpdated={onLessonUpdated} />
           <div className="flex items-center gap-2">
             <span className="text-[11px] uppercase tracking-wider text-[var(--muted)]">
               Length

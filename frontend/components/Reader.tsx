@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchArticle, mediaUrl, type ArticleContent } from "@/lib/api";
+import {
+  fetchArticle,
+  generateMedia,
+  mediaUrl,
+  type ArticleContent,
+  type ArticleMedia,
+} from "@/lib/api";
 import { hostOf } from "@/lib/lessons";
 
 // In-app article reader: a slide-over panel that shows a saved article's
@@ -173,7 +179,7 @@ export default function Reader({
                 </div>
               )}
 
-              <ListenArea media={article.media} />
+              <ListenArea url={url} media={article.media} />
 
               <div className="mt-6 font-serif text-[17px] leading-relaxed text-[var(--ink)]">
                 {paragraphs.length > 0 ? (
@@ -197,27 +203,31 @@ export default function Reader({
 }
 
 // The per-article media affordance, mirroring LessonCard's AudioPlayer pattern:
-// when an asset exists, a compact native player with a small muted caption;
-// when none of the three exist, a single honest "coming soon" pill. Players are
-// editorial and compact — full-width audio, a contained video clip.
-function ListenArea({ media }: { media?: ArticleContent["media"] }) {
-  const audioSummary = media?.audio_summary;
-  const audioFull = media?.audio_full;
-  const video = media?.video;
+// when an asset exists, a compact native player with a small muted caption; when
+// one is absent, a "Generate" button that calls the real /generate-media
+// endpoint (article scope, ref = the article url) and renders the player on
+// success. Players are editorial and compact — full-width audio, a contained
+// video clip. Local media state lets a freshly generated asset appear in place;
+// it's reseeded whenever the reader opens a different article (keyed on `url`).
+function ListenArea({
+  url,
+  media,
+}: {
+  url: string;
+  media?: ArticleContent["media"];
+}) {
+  const [local, setLocal] = useState<ArticleMedia | undefined>(media);
+  useEffect(() => {
+    setLocal(media);
+  }, [url, media]);
 
-  if (!audioSummary && !audioFull && !video) {
-    return (
-      <div className="mt-5">
-        <span className="inline-flex cursor-not-allowed items-center gap-2 rounded-full border border-[var(--border)] px-4 py-1.5 text-xs font-medium text-[var(--muted)]">
-          ▶ Audio coming soon
-        </span>
-      </div>
-    );
-  }
+  const audioSummary = local?.audio_summary;
+  const audioFull = local?.audio_full;
+  const video = local?.video;
 
   return (
     <div className="mt-5 space-y-3 border-t border-[var(--border)] pt-4">
-      {audioSummary && (
+      {audioSummary ? (
         <div className="space-y-1.5">
           <p className="text-[11px] uppercase tracking-wider text-[var(--muted)]">
             Summary
@@ -229,6 +239,18 @@ function ListenArea({ media }: { media?: ArticleContent["media"] }) {
             className="w-full"
           />
         </div>
+      ) : (
+        <GenerateMediaButton
+          label="Generate audio"
+          opts={{ kind: "audio", scope: "article", ref: url, length: "summary" }}
+          onGenerated={(path) =>
+            setLocal((prev) => ({
+              audio_full: prev?.audio_full ?? null,
+              audio_summary: path,
+              video: prev?.video ?? null,
+            }))
+          }
+        />
       )}
       {audioFull && (
         <div className="space-y-1.5">
@@ -243,7 +265,7 @@ function ListenArea({ media }: { media?: ArticleContent["media"] }) {
           />
         </div>
       )}
-      {video && (
+      {video ? (
         <div className="space-y-1.5">
           <p className="text-[11px] uppercase tracking-wider text-[var(--muted)]">
             Video
@@ -255,7 +277,93 @@ function ListenArea({ media }: { media?: ArticleContent["media"] }) {
             className="w-full rounded-md border border-[var(--border)]"
           />
         </div>
+      ) : (
+        <GenerateMediaButton
+          label="Generate video"
+          opts={{ kind: "video", scope: "article", ref: url }}
+          onGenerated={(path) =>
+            setLocal((prev) => ({
+              audio_full: prev?.audio_full ?? null,
+              audio_summary: prev?.audio_summary ?? null,
+              video: path,
+            }))
+          }
+        />
       )}
     </div>
+  );
+}
+
+// A single Generate affordance: a pill button that calls the real
+// /generate-media endpoint and, on success, hands the returned media path to
+// `onGenerated` (the caller wires it into state so the player renders). While
+// the request is in flight it shows "Generating…" with a subtle spinner and is
+// disabled. The two non-success outcomes are surfaced inline and keep the
+// button: not_configured (no server key — expected today) shows a muted note,
+// error shows the message. Honest by design — we never fake a path.
+function GenerateMediaButton({
+  label,
+  opts,
+  onGenerated,
+}: {
+  label: string;
+  opts: {
+    kind: "audio" | "video";
+    scope: "article" | "topic";
+    ref: string;
+    length?: "summary" | "full";
+  };
+  onGenerated: (path: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+
+  async function run() {
+    if (busy) return;
+    setBusy(true);
+    setNote(null);
+    const res = await generateMedia(opts);
+    setBusy(false);
+    if (res.ok) {
+      onGenerated(res.path);
+      return;
+    }
+    setNote(
+      res.message ??
+        (res.status === "not_configured"
+          ? "Media generation isn't configured on the server yet."
+          : "Couldn't generate that just now.")
+    );
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <button
+        type="button"
+        disabled={busy}
+        onClick={run}
+        className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-4 py-1.5 text-xs font-medium text-[var(--ink)] transition-colors hover:border-[color-mix(in_oklab,var(--accent)_40%,var(--border))] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {busy ? (
+          <>
+            <Spinner />
+            Generating…
+          </>
+        ) : (
+          <>▶ {label}</>
+        )}
+      </button>
+      {note && <p className="text-xs italic text-[var(--muted)]">{note}</p>}
+    </div>
+  );
+}
+
+// A subtle inline spinner sized for the pill buttons — token-colored, no deps.
+function Spinner() {
+  return (
+    <span
+      aria-hidden
+      className="inline-block h-3 w-3 animate-spin rounded-full border border-[var(--muted)] border-t-transparent"
+    />
   );
 }

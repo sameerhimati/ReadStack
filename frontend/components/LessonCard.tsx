@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import type { Article, Lesson, LessonLength, PipelineResponse } from "@/lib/types";
-import { mediaUrl, moveArticle, regenerateLesson } from "@/lib/api";
+import { generateMedia, mediaUrl, moveArticle, regenerateLesson } from "@/lib/api";
 import { hostOf, type TopicOption } from "@/lib/lessons";
 
 const LENGTHS: { value: LessonLength; label: string }[] = [
@@ -118,13 +118,19 @@ export function VerifiedBadge({ lesson }: { lesson: Lesson }) {
 }
 
 // The audio affordance — the gravitational center. When audio is ready, the
-// native player; otherwise a tasteful, honest "coming soon" pill.
+// native player; otherwise a "Generate audio" button that calls the real
+// /generate-media endpoint (topic scope, ref = the lesson's topic_id). On
+// success it lifts the lesson with audio_path set via onLessonUpdated, so the
+// player appears from page state on the next render. The "coming soon" pill
+// stays as the fallback when no onLessonUpdated is wired.
 export function AudioPlayer({
   lesson,
   prominent = false,
+  onLessonUpdated,
 }: {
   lesson: Lesson;
   prominent?: boolean;
+  onLessonUpdated?: (updated: Lesson) => void;
 }) {
   if (lesson.audio_path) {
     return (
@@ -133,6 +139,15 @@ export function AudioPlayer({
         preload="none"
         src={mediaUrl(lesson.audio_path)}
         className={prominent ? "w-full" : ""}
+      />
+    );
+  }
+  if (onLessonUpdated) {
+    return (
+      <GenerateMediaButton
+        label="Generate audio"
+        opts={{ kind: "audio", scope: "topic", ref: lesson.topic_id }}
+        onGenerated={(path) => onLessonUpdated({ ...lesson, audio_path: path })}
       />
     );
   }
@@ -147,18 +162,105 @@ export function AudioPlayer({
   );
 }
 
-// The per-topic video slot. Honest by design: render the clip only when the
-// lesson actually carries one; absent => render nothing (no dead "generate"
-// affordance). Sized to the card, sits beside the AudioPlayer.
-export function LessonVideo({ lesson }: { lesson: Lesson }) {
-  if (!lesson.video_path) return null;
+// The per-topic video slot. When the lesson carries a clip, render it. When it
+// doesn't, show a "Generate video" button (topic scope) that lifts the lesson
+// with video_path set on success — falling back to nothing if onLessonUpdated
+// isn't wired (honest: no dead affordance). Sits beside the AudioPlayer.
+export function LessonVideo({
+  lesson,
+  onLessonUpdated,
+}: {
+  lesson: Lesson;
+  onLessonUpdated?: (updated: Lesson) => void;
+}) {
+  if (lesson.video_path) {
+    return (
+      <video
+        controls
+        preload="none"
+        src={mediaUrl(lesson.video_path)}
+        className="w-full rounded-md border border-[var(--border)]"
+      />
+    );
+  }
+  if (onLessonUpdated) {
+    return (
+      <GenerateMediaButton
+        label="Generate video"
+        opts={{ kind: "video", scope: "topic", ref: lesson.topic_id }}
+        onGenerated={(path) => onLessonUpdated({ ...lesson, video_path: path })}
+      />
+    );
+  }
+  return null;
+}
+
+// A single Generate affordance shared by the audio and video slots: a pill
+// button that calls the real /generate-media endpoint and, on success, hands the
+// returned media path to `onGenerated` (the caller wires it into page state via
+// handleLessonUpdated so the player renders). While in flight it shows
+// "Generating…" with a subtle spinner and is disabled. The two non-success
+// outcomes are surfaced inline and keep the button: not_configured (no server
+// key — expected today) shows a muted note, error shows the message. Honest by
+// design — we never fake a path.
+function GenerateMediaButton({
+  label,
+  opts,
+  onGenerated,
+}: {
+  label: string;
+  opts: {
+    kind: "audio" | "video";
+    scope: "article" | "topic";
+    ref: string;
+    length?: "summary" | "full";
+  };
+  onGenerated: (path: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+
+  async function run(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (busy) return;
+    setBusy(true);
+    setNote(null);
+    const res = await generateMedia(opts);
+    setBusy(false);
+    if (res.ok) {
+      onGenerated(res.path);
+      return;
+    }
+    setNote(
+      res.message ??
+        (res.status === "not_configured"
+          ? "Media generation isn't configured on the server yet."
+          : "Couldn't generate that just now.")
+    );
+  }
+
   return (
-    <video
-      controls
-      preload="none"
-      src={mediaUrl(lesson.video_path)}
-      className="w-full rounded-md border border-[var(--border)]"
-    />
+    <div className="space-y-1.5">
+      <button
+        type="button"
+        disabled={busy}
+        onClick={run}
+        className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-4 py-1.5 text-xs font-medium text-[var(--ink)] transition-colors hover:border-[color-mix(in_oklab,var(--accent)_40%,var(--border))] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {busy ? (
+          <>
+            <span
+              aria-hidden
+              className="inline-block h-3 w-3 animate-spin rounded-full border border-[var(--muted)] border-t-transparent"
+            />
+            Generating…
+          </>
+        ) : (
+          <>▶ {label}</>
+        )}
+      </button>
+      {note && <p className="text-xs italic text-[var(--muted)]">{note}</p>}
+    </div>
   );
 }
 

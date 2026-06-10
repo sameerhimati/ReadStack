@@ -26,6 +26,7 @@ and the next rebuild wires it automatically.
 from __future__ import annotations
 
 import hashlib
+import os
 from pathlib import Path
 
 import httpx
@@ -35,6 +36,16 @@ from contracts import Lesson
 _MEDIA = Path(__file__).parent / "data" / "media"
 _AUDIO_EXTS = (".m4a", ".mp3", ".wav")
 _VIDEO_EXTS = (".mp4", ".webm")
+
+# Runtime generation provider (Magnific/Freepik REST). Empty -> generation is off
+# and the API returns "not_configured"; pre-baked assets (dropped via the MCP at
+# build time) keep playing regardless. Set MAGNIFIC_API_KEY to turn the button on.
+_MAGNIFIC_KEY = os.getenv("MAGNIFIC_API_KEY", "")
+_MAGNIFIC_BASE = os.getenv("MAGNIFIC_BASE_URL", "https://api.magnific.ai")
+
+
+def generation_enabled() -> bool:
+    return bool(_MAGNIFIC_KEY)
 
 
 def _find(stem: str, exts: tuple[str, ...]) -> str | None:
@@ -80,6 +91,39 @@ def article_media(url: str) -> dict:
         "audio_summary": _find(f"{key}__summary", _AUDIO_EXTS),
         "video": _find(key, _VIDEO_EXTS),
     }
+
+
+async def generate_audio(text: str, stem: str, *, ext: str = ".mp3") -> str:
+    """Generate narration via Magnific's REST API and save it to data/media/<stem><ext>.
+
+    This is the RUNTIME path (the deployed box has no MCP). Reached only when
+    MAGNIFIC_API_KEY is set. NOTE: the endpoint/payload below is the integration
+    point — confirm it against Magnific's REST docs when the key lands; the rest of
+    the pipeline (save + overlay) is provider-agnostic.
+    """
+    async with httpx.AsyncClient(timeout=180) as client:
+        r = await client.post(
+            f"{_MAGNIFIC_BASE}/v1/audio/tts",
+            headers={"Authorization": f"Bearer {_MAGNIFIC_KEY}"},
+            json={"text": text[:3000], "model": "eleven_v3"},
+        )
+        r.raise_for_status()
+        asset_url = r.json()["url"]      # adjust to the real response shape
+    return save_asset(asset_url, stem, ext)
+
+
+async def generate_video(text: str, stem: str, *, ext: str = ".mp4") -> str:
+    """Generate a short clip via Magnific's REST API and save it. Runtime path; same
+    integration-point caveat as generate_audio."""
+    async with httpx.AsyncClient(timeout=300) as client:
+        r = await client.post(
+            f"{_MAGNIFIC_BASE}/v1/video/generate",
+            headers={"Authorization": f"Bearer {_MAGNIFIC_KEY}"},
+            json={"prompt": text[:1000]},
+        )
+        r.raise_for_status()
+        asset_url = r.json()["url"]      # adjust to the real response shape
+    return save_asset(asset_url, stem, ext)
 
 
 def save_asset(url: str, stem: str, ext: str = ".mp3") -> str:

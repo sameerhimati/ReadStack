@@ -78,6 +78,13 @@ class MoveRequest(BaseModel):
     topic_id: str
 
 
+class GenerateMediaRequest(BaseModel):
+    kind: str = "audio"        # "audio" | "video"
+    scope: str = "article"     # "article" (ref=url) | "topic" (ref=topic_id)
+    ref: str
+    length: str = "summary"    # audio only: "summary" | "full"
+
+
 _LENGTHS = {"short", "medium", "long"}
 
 
@@ -399,6 +406,43 @@ async def regenerate_lesson(req: RegenerateRequest):
     ]
     store.save_snapshot(snapshot)
     return {"ok": True, "lesson": new_lesson, "length": length}
+
+
+@app.post("/generate-media")
+async def generate_media(req: GenerateMediaRequest):
+    """Generate narration/clip on demand for an article or topic, and overlay it.
+
+    Env-gated like the inference tier: with no MAGNIFIC_API_KEY this returns
+    'not_configured' (and the pre-baked assets keep playing); set the key and the
+    button goes live with no code change. Returns the saved filename on success."""
+    if not audio_video.generation_enabled():
+        return {"ok": False, "status": "not_configured",
+                "message": "Live generation needs MAGNIFIC_API_KEY on the server. "
+                           "Pre-baked audio still plays."}
+
+    # Resolve the text to narrate + the on-disk stem the overlay looks for.
+    if req.scope == "article":
+        art = next((a for a in store.all_articles() if a.url == req.ref), None)
+        if art is None:
+            return {"ok": False, "status": "error", "message": "Unknown article."}
+        suffix = "__full" if req.length == "full" else "__summary"
+        stem = audio_video.article_key(req.ref) + suffix
+        text = art.text if req.length == "full" else art.text[:1200]
+    else:  # topic
+        snap = store.load_snapshot() or {}
+        les = next((l for l in snap.get("lessons", []) if l["topic_id"] == req.ref), None)
+        if les is None:
+            return {"ok": False, "status": "error", "message": "Unknown topic lesson."}
+        stem, text = req.ref, les["script"]
+
+    try:
+        if req.kind == "video":
+            name = await audio_video.generate_video(text, stem)
+        else:
+            name = await audio_video.generate_audio(text, stem)
+        return {"ok": True, "kind": req.kind, "path": name}
+    except Exception as exc:  # provider/network error -> graceful, not a 500
+        return {"ok": False, "status": "error", "message": str(exc)}
 
 
 @app.get("/article")
