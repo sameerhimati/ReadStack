@@ -19,6 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+import audio_video
 import cluster
 import ingest
 import metrics
@@ -97,6 +98,9 @@ async def _rebuild_from_store() -> dict:
         lesson = await tasks.lesson(node, node_articles)
         lesson = await tasks.verify(lesson, node_articles)
         lessons.append(lesson)
+
+    # Overlay any generated narration (Magnific / placeholder) by topic_id.
+    audio_video.apply_audio(lessons)
 
     snapshot = {
         "articles": [{"url": a.url, "title": a.title, "tags": a.tags} for a in articles],
