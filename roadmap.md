@@ -54,4 +54,12 @@ THEN audio (Magnific) → THEN video. Don't gold-plate the core before audio wor
    "right model on the right GPU for the task." ← the inference point
 6. Close: "the inference choice is what makes consuming your whole backlog easy."
 
+## Add flow — `extension/`
+Two zero-friction ways to save a link, both POST `{url}` → `POST /add`:
+- **Bookmarklet** — `javascript:` one-liner, drag to bookmarks bar, alert on save.
+- **Unpacked MV3 extension** — popup shows the tab, "Save to ReadStack" button,
+  backend field (defaults to `localhost:8000`). `chrome://extensions` → Load unpacked.
+Both lean on the already-open CORS. Future: published extension + PWA mobile
+share-target so a phone "Share → ReadStack" drops a link in the backlog.
+
 ## Cuts: voice agents · multi-source APIs · auth · DB · training a model.

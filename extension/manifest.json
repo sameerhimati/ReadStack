@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Save to ReadStack",
+  "version": "0.1.0",
+  "description": "Save the current tab to your ReadStack backlog. Hackathon demo build.",
+  "permissions": ["activeTab", "tabs"],
+  "host_permissions": [
+    "http://localhost:8000/*"
+  ],
+  "action": {
+    "default_title": "Save to ReadStack",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon.png",
+      "48": "icon.png",
+      "128": "icon.png"
+    }
+  },
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  }
+}
