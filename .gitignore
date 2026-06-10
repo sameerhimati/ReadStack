@@ -21,6 +21,9 @@ frontend/out/
 frontend/build/
 .DS_Store
 
+# Local persistence (SQLite store)
+backend/data/*.db
+
 # Generated media (audio/video lessons)
 *.mp4
 *.mp3
