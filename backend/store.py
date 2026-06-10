@@ -1,133 +1,38 @@
 """
-Persistence — SQLite now, written to lift to Postgres later.
+Persistence selector.
 
-Two things live here: the raw `articles` (so a backlog survives restarts and an
-incremental `/add` doesn't re-fetch everything) and a single cached pipeline
-`snapshot` (topics + lessons + metrics) so the reader and the `/add` assigner can
-read the current structure without rebuilding. Embeddings are stored as packed
-float32 blobs — compact and exact enough for cosine.
-
-Schema is deliberately flat (url PK, JSON columns) so it ports to Postgres with
-minimal change: `embedding_blob BYTEA`, `*_json JSONB`.
+One env var decides the backend, nothing else changes: set DATABASE_URL (the
+Linode pgvector one-click) and the whole app runs on Postgres + pgvector; leave
+it unset and it's zero-setup SQLite. Both modules expose the identical interface
+(init_db, upsert_article, all_articles, article_count, save_snapshot,
+load_snapshot), so main.py just imports `store`.
 """
 from __future__ import annotations
 
-import json
-import sqlite3
-from datetime import datetime, timezone
-from pathlib import Path
+import logging
+import os
 
-import numpy as np
+log = logging.getLogger(__name__)
 
-from contracts import Article
+if os.getenv("DATABASE_URL"):
+    from store_pg import (  # noqa: F401
+        all_articles,
+        article_count,
+        init_db,
+        load_snapshot,
+        save_snapshot,
+        upsert_article,
+    )
 
-_DB_PATH = Path(__file__).parent / "data" / "readstack.db"
+    log.info("store: using Postgres + pgvector (DATABASE_URL set)")
+else:
+    from store_sqlite import (  # noqa: F401
+        all_articles,
+        article_count,
+        init_db,
+        load_snapshot,
+        save_snapshot,
+        upsert_article,
+    )
 
-
-def _conn() -> sqlite3.Connection:
-    _DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(_DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-def init_db() -> None:
-    """Create tables if they don't exist. Safe to call on every startup."""
-    with _conn() as c:
-        c.execute(
-            """
-            CREATE TABLE IF NOT EXISTS articles (
-                url            TEXT PRIMARY KEY,
-                title          TEXT NOT NULL DEFAULT '',
-                text           TEXT NOT NULL DEFAULT '',
-                tags_json      TEXT NOT NULL DEFAULT '[]',
-                embedding_blob BLOB,
-                added_at       TEXT NOT NULL
-            )
-            """
-        )
-        c.execute(
-            """
-            CREATE TABLE IF NOT EXISTS snapshot (
-                id         INTEGER PRIMARY KEY CHECK (id = 1),
-                json       TEXT NOT NULL,
-                updated_at TEXT NOT NULL
-            )
-            """
-        )
-
-
-def _pack(embedding: list[float] | None) -> bytes | None:
-    if not embedding:
-        return None
-    return np.asarray(embedding, dtype="<f4").tobytes()
-
-
-def _unpack(blob: bytes | None) -> list[float] | None:
-    if blob is None:
-        return None
-    return np.frombuffer(blob, dtype="<f4").tolist()
-
-
-def upsert_article(article: Article) -> None:
-    """Insert or replace one article (keyed by url)."""
-    with _conn() as c:
-        c.execute(
-            """
-            INSERT INTO articles (url, title, text, tags_json, embedding_blob, added_at)
-            VALUES (?, ?, ?, ?, ?, ?)
-            ON CONFLICT(url) DO UPDATE SET
-                title=excluded.title, text=excluded.text,
-                tags_json=excluded.tags_json, embedding_blob=excluded.embedding_blob
-            """,
-            (
-                article.url,
-                article.title,
-                article.text,
-                json.dumps(article.tags),
-                _pack(article.embedding),
-                datetime.now(timezone.utc).isoformat(),
-            ),
-        )
-
-
-def all_articles() -> list[Article]:
-    """Rehydrate every stored article, embedding included."""
-    with _conn() as c:
-        rows = c.execute(
-            "SELECT url, title, text, tags_json, embedding_blob FROM articles ORDER BY added_at"
-        ).fetchall()
-    return [
-        Article(
-            url=r["url"],
-            title=r["title"],
-            text=r["text"],
-            tags=json.loads(r["tags_json"]),
-            embedding=_unpack(r["embedding_blob"]),
-        )
-        for r in rows
-    ]
-
-
-def article_count() -> int:
-    with _conn() as c:
-        return c.execute("SELECT COUNT(*) AS n FROM articles").fetchone()["n"]
-
-
-def save_snapshot(snapshot: dict) -> None:
-    """Cache the latest pipeline output (topics + lessons + metrics)."""
-    with _conn() as c:
-        c.execute(
-            """
-            INSERT INTO snapshot (id, json, updated_at) VALUES (1, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET json=excluded.json, updated_at=excluded.updated_at
-            """,
-            (json.dumps(snapshot), datetime.now(timezone.utc).isoformat()),
-        )
-
-
-def load_snapshot() -> dict | None:
-    """The last cached pipeline output, or None if we've never built one."""
-    with _conn() as c:
-        row = c.execute("SELECT json FROM snapshot WHERE id = 1").fetchone()
-    return json.loads(row["json"]) if row else None
+    log.info("store: using SQLite (no DATABASE_URL)")
